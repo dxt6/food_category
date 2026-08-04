@@ -6,7 +6,7 @@
   <div>
     <div class="d-flex justify-content-between align-items-center mb-3">
       <h4 class="mb-0 reveal">③ 记录查询统计</h4>
-      <a class="btn btn-success btn-sm" href="{% url 'record_export' %}">导出 CSV</a>
+      <a class="btn btn-success btn-sm" href="{% url 'record_export' %}" data-loading-text="导出中…">导出 CSV</a>
     </div>
     <form method="get" class="mb-3 d-flex gap-2 reveal">
       <select class="form-select w-auto" name="model">
@@ -28,7 +28,9 @@
                 <td>{{ r.confidence|floatformat:3 }}</td>
                 <td>{{ r.model_name }}</td>
                 <td>{{ r.user.username|default:"—" }}</td></tr>
-          {% empty %}<tr><td colspan="6">暂无记录</td></tr>{% endfor %}
+          {% empty %}<tr><td colspan="6" class="text-center py-4">
+            <div class="text-muted">暂无推理记录</div>
+          </td></tr>{% endfor %}
           </tbody>
         </table>
       </div>

@@ -17,7 +17,7 @@
               <td>{{ m.accuracy|floatformat:4 }}</td>
               <td>{{ m.train_samples }} / {{ m.test_samples }}</td>
               <td>
-                <form method="post" action="{% url 'model_train' m.model_name %}" class="d-inline">{% csrf_token %}<button class="btn btn-sm btn-outline-primary">重新训练</button></form>
+                <form method="post" action="{% url 'model_train' m.model_name %}" class="d-inline">{% csrf_token %}<button class="btn btn-sm btn-outline-primary" data-loading-text="训练中，请勿重复提交">重新训练</button></form>
                 {% if m.model_name != default %}
                 <form method="post" action="{% url 'model_set_default' m.model_name %}" class="d-inline">{% csrf_token %}<button class="btn btn-sm btn-outline-success">设为默认</button></form>
                 {% endif %}

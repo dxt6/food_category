@@ -94,6 +94,23 @@
     }, 6000);
   });
 
+  // 带 data-loading-text 的链接（如导出）：点击即禁用+进行中
+  document.addEventListener("click", function (e) {
+    var a = e.target.closest && e.target.closest("a[data-loading-text]");
+    if (!a || a.dataset.loading === "1") return;
+    var old = a.textContent;
+    a.dataset.loading = "1";
+    a.style.pointerEvents = "none";
+    a.textContent = a.dataset.loadingText || "处理中…";
+    setTimeout(function () {
+      if (a && document.body.contains(a)) {
+        a.style.pointerEvents = "";
+        a.textContent = old;
+        a.dataset.loading = "";
+      }
+    }, 6000);
+  });
+
   // 把页面里的 Django alert 也包一层淡入（保持可读，不破坏功能）
   document.querySelectorAll(".alert").forEach(function (el) {
     el.style.opacity = "0";
