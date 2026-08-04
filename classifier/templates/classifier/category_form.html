@@ -1,0 +1,31 @@
+{% extends "classifier/base.html" %}
+{% block title %}新增类目{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-6">
+    <div class="card p-4">
+      <h5>新增 / 更新类目</h5>
+      <form method="post">
+        {% csrf_token %}
+        <div class="mb-2"><label class="form-label">分类编码（如 01-01-01，已存在则更新）</label>
+          <input class="form-control" name="code" required></div>
+        <div class="mb-2"><label class="form-label">类目名称</label>
+          <input class="form-control" name="name" required></div>
+        <div class="mb-2"><label class="form-label">层级</label>
+          <select class="form-select" name="level">
+            <option value="1">一级类目</option>
+            <option value="2">二级类目</option>
+            <option value="3" selected>三级类目</option>
+          </select></div>
+        <div class="mb-3"><label class="form-label">父级编码（一级留空）</label>
+          <select class="form-select" name="parent_code">
+            <option value="">— 无 —</option>
+            {% for p in parents %}<option value="{{ p.code }}">{{ p.code }} {{ p.name }}</option>{% endfor %}
+          </select></div>
+        <button class="btn btn-success w-100">保存</button>
+        <a class="btn btn-link btn-sm mt-2" href="{% url 'category_list' %}">← 返回</a>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

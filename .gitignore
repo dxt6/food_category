@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+
+# 虚拟环境
+.venv/
+venv/
+env/
+
+# 数据库（运行时生成，含真实数据，不入库）
+*.sqlite3
+*.sqlite3-journal
+db.sqlite3
+test.db
+test.db-journal
+
+# Django
+static_collected/
+*.log
+
+# 系统/编辑器
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

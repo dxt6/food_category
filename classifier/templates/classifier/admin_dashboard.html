@@ -1,0 +1,55 @@
+{% extends "classifier/base.html" %}
+{% block title %}管理后台{% endblock %}
+{% block content %}
+<div class="ek-layout">
+  <!-- 侧边栏：五大模块导航 -->
+  <aside class="ek-side reveal">
+    <div class="ek-side-title">实训管理</div>
+    <a class="ek-navlink active" href="{% url 'admin_dashboard' %}"><span class="ek-ico">▦</span>仪表盘</a>
+    <a class="ek-navlink" href="{% url 'category_list' %}"><span class="ek-ico">⛃</span>品类管理</a>
+    <a class="ek-navlink" href="{% url 'sample_list' %}"><span class="ek-ico">❏</span>样本管理</a>
+    <a class="ek-navlink" href="{% url 'model_manager' %}"><span class="ek-ico">⚙</span>模型管理</a>
+    <a class="ek-navlink" href="{% url 'record_list' %}"><span class="ek-ico">☰</span>记录查询</a>
+    <a class="ek-navlink" href="{% url 'user_manager' %}"><span class="ek-ico">👤</span>权限管理</a>
+  </aside>
+
+  <div>
+    <h4 class="mb-3 reveal">PC 管理后台 · 仪表盘</h4>
+
+    <!-- 统计数字卡片 -->
+    <div class="row g-3 mb-4">
+      <div class="col-6 col-md-2"><div class="ek-stat reveal"><div class="ek-num">{{ l1 }}</div><div class="ek-label">一级类目</div></div></div>
+      <div class="col-6 col-md-2"><div class="ek-stat reveal"><div class="ek-num">{{ l2 }}</div><div class="ek-label">二级类目</div></div></div>
+      <div class="col-6 col-md-2"><div class="ek-stat reveal"><div class="ek-num">{{ l3 }}</div><div class="ek-label">三级类目</div></div></div>
+      <div class="col-6 col-md-2"><div class="ek-stat reveal"><div class="ek-num">{{ samples }}</div><div class="ek-label">标注样本</div></div></div>
+      <div class="col-6 col-md-2"><div class="ek-stat reveal"><div class="ek-num">{{ records }}</div><div class="ek-label">推理记录</div></div></div>
+      <div class="col-6 col-md-2"><div class="ek-stat reveal"><div class="ek-num">{{ users }}</div><div class="ek-label">账号数</div></div></div>
+    </div>
+
+    <div class="row g-3">
+      <div class="col-md-6">
+        <div class="card p-3 reveal">
+          <h6 class="mb-3">模型准确率</h6>
+          <p class="small text-muted">当前默认模型：<b>{{ default_model }}</b></p>
+          <ul class="mb-3">
+            {% for m in models %}
+              <li class="mb-1">{{ m.model_name }}：测试准确率 {{ m.accuracy|floatformat:4 }}（样本 {{ m.train_samples }}+{{ m.test_samples }}）</li>
+            {% empty %}<li>尚未训练模型</li>{% endfor %}
+          </ul>
+          <a class="btn btn-sm btn-success" href="{% url 'model_manager' %}">前往模型管理</a>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="card p-3 reveal">
+          <h6 class="mb-3">最近操作日志</h6>
+          <ul class="small mb-0">
+            {% for l in logs %}
+              <li class="mb-1">[{{ l.created_at|date:"m-d H:i" }}] {{ l.action }} — {{ l.detail }}</li>
+            {% empty %}<li>暂无日志</li>{% endfor %}
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

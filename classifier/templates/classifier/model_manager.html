@@ -1,0 +1,40 @@
+{% extends "classifier/base.html" %}
+{% block title %}模型管理{% endblock %}
+{% block content %}
+<div class="ek-layout">
+  {% include "classifier/admin_sidebar.html" with active="model" %}
+  <div>
+    <h4 class="mb-3 reveal">② 样本与模型管理 · 模型</h4>
+    <div class="card p-3 reveal">
+      <p class="small text-muted">当前默认推理模型：<b>{{ default }}</b>（演示端将使用此模型进行一键推理）</p>
+      <div class="ek-table-wrap">
+        <table class="table table-sm">
+          <thead><tr><th>模型</th><th>测试准确率</th><th>训练/测试样本</th><th>操作</th></tr></thead>
+          <tbody>
+          {% for m in models %}
+            <tr>
+              <td>{{ m.model_name }}{% if m.model_name == default %} <span class="badge bg-success">默认</span>{% endif %}</td>
+              <td>{{ m.accuracy|floatformat:4 }}</td>
+              <td>{{ m.train_samples }} / {{ m.test_samples }}</td>
+              <td>
+                <form method="post" action="{% url 'model_train' m.model_name %}" class="d-inline">{% csrf_token %}<button class="btn btn-sm btn-outline-primary">重新训练</button></form>
+                {% if m.model_name != default %}
+                <form method="post" action="{% url 'model_set_default' m.model_name %}" class="d-inline">{% csrf_token %}<button class="btn btn-sm btn-outline-success">设为默认</button></form>
+                {% endif %}
+              </td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="4">尚未训练模型，点击下方按钮训练。</td></tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <div class="mt-2">
+        <form method="post" action="{% url 'model_train' 'svm' %}" class="d-inline">{% csrf_token %}<button class="btn btn-success btn-sm">训练 SVM</button></form>
+        <form method="post" action="{% url 'model_train' 'rf' %}" class="d-inline">{% csrf_token %}<button class="btn btn-success btn-sm">训练 随机森林</button></form>
+        <a class="btn btn-link btn-sm" href="{% url 'admin_dashboard' %}">← 返回仪表盘</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

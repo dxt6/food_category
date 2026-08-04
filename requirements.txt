@@ -1,0 +1,4 @@
+Django>=5.0
+scikit-learn>=1.3
+joblib>=1.3
+# 若切换为文档要求的 MySQL，请额外安装：mysqlclient

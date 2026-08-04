@@ -1,0 +1,32 @@
+{% extends "classifier/base.html" %}
+{% block title %}样本管理{% endblock %}
+{% block content %}
+<div class="ek-layout">
+  {% include "classifier/admin_sidebar.html" with active="sample" %}
+  <div>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h4 class="mb-0 reveal">② 样本管理</h4>
+      <a class="btn btn-success btn-sm" href="{% url 'sample_add' %}">+ 新增样本</a>
+    </div>
+    <form method="get" class="mb-3 d-flex gap-2 reveal">
+      <input class="form-control" name="q" value="{{ q }}" placeholder="按食品名称搜索">
+      <button class="btn btn-outline-success">搜索</button>
+    </form>
+    <div class="card p-3 reveal">
+      <div class="ek-table-wrap">
+        <table class="table table-sm table-hover">
+          <thead><tr><th>名称</th><th>描述</th><th>三级类目</th><th>来源</th></tr></thead>
+          <tbody>
+          {% for s in samples %}
+            <tr><td>{{ s.name }}</td><td class="small">{{ s.description|truncatechars:30 }}</td>
+                <td><code>{{ s.category.code }}</code> {{ s.category.name }}</td>
+                <td>{{ s.get_source_display }}</td></tr>
+          {% empty %}<tr><td colspan="4">暂无样本</td></tr>{% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <a class="btn btn-link btn-sm" href="{% url 'admin_dashboard' %}">← 返回仪表盘</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

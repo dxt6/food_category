@@ -1,0 +1,24 @@
+{% extends "classifier/base.html" %}
+{% block title %}新增样本{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-7">
+    <div class="card p-4">
+      <h5>新增食品样本（可用于扩充训练数据）</h5>
+      <form method="post">
+        {% csrf_token %}
+        <div class="mb-2"><label class="form-label">食品名称</label>
+          <input class="form-control" name="name" required></div>
+        <div class="mb-2"><label class="form-label">品类描述</label>
+          <textarea class="form-control" name="desc" rows="3"></textarea></div>
+        <div class="mb-3"><label class="form-label">所属三级类目</label>
+          <select class="form-select" name="category" required>
+            {% for c in cats %}<option value="{{ c.code }}">{{ c.code }} {{ c.name }}</option>{% endfor %}
+          </select></div>
+        <button class="btn btn-success w-100">保存样本</button>
+        <a class="btn btn-link btn-sm mt-2" href="{% url 'sample_list' %}">← 返回</a>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

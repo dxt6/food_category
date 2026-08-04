@@ -1,0 +1,10 @@
+{% comment %}后台统一侧边栏片段；调用方传 active=xxx {% endcomment %}
+<aside class="ek-side reveal">
+  <div class="ek-side-title">实训管理</div>
+  <a class="ek-navlink {% if active == 'dashboard' %}active{% endif %}" href="{% url 'admin_dashboard' %}"><span class="ek-ico">▦</span>仪表盘</a>
+  <a class="ek-navlink {% if active == 'category' %}active{% endif %}" href="{% url 'category_list' %}"><span class="ek-ico">⛃</span>品类管理</a>
+  <a class="ek-navlink {% if active == 'sample' %}active{% endif %}" href="{% url 'sample_list' %}"><span class="ek-ico">❏</span>样本管理</a>
+  <a class="ek-navlink {% if active == 'model' %}active{% endif %}" href="{% url 'model_manager' %}"><span class="ek-ico">⚙</span>模型管理</a>
+  <a class="ek-navlink {% if active == 'record' %}active{% endif %}" href="{% url 'record_list' %}"><span class="ek-ico">☰</span>记录查询</a>
+  <a class="ek-navlink {% if active == 'user' %}active{% endif %}" href="{% url 'user_manager' %}"><span class="ek-ico">👤</span>权限管理</a>
+</aside>

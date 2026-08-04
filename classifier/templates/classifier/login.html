@@ -1,0 +1,27 @@
+{% extends "classifier/base.html" %}
+{% block title %}登录{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-5">
+    <div class="card p-4 mt-5 reveal">
+      <h4 class="mb-3 text-center">账号登录</h4>
+      {% if error %}<div class="alert alert-danger">{{ error }}</div>{% endif %}
+      <form method="post">
+        {% csrf_token %}
+        <div class="mb-3">
+          <label class="form-label">用户名</label>
+          <input class="form-control" name="username" required autofocus>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">密码</label>
+          <input type="password" class="form-control" name="password" required>
+        </div>
+        <button class="btn btn-success w-100">登录</button>
+      </form>
+      <div class="mt-3 small text-muted text-center">
+        演示账号：student/student123（学生）　admin/admin123（管理员）
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

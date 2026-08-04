@@ -1,0 +1,41 @@
+{% extends "classifier/base.html" %}
+{% block title %}品类管理{% endblock %}
+{% block content %}
+<div class="ek-layout">
+  {% include "classifier/admin_sidebar.html" with active="category" %}
+  <div>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h4 class="mb-0 reveal">① 基础品类管理</h4>
+      <a class="btn btn-success btn-sm" href="{% url 'category_add' %}">+ 新增类目</a>
+    </div>
+    <div class="card p-3 reveal">
+      <div class="ek-table-wrap">
+        <table class="table table-sm table-hover">
+          <thead><tr><th>编码</th><th>名称</th><th>层级</th><th>父级</th><th>操作</th></tr></thead>
+          <tbody>
+          {% for c in cats %}
+            <tr>
+              <td><code>{{ c.code }}</code></td>
+              <td>{{ c.name }}</td>
+              <td>
+                {% if c.level == 1 %}<span class="badge bg-primary">一级</span>
+                {% elif c.level == 2 %}<span class="badge bg-info">二级</span>
+                {% else %}<span class="badge bg-secondary">三级</span>{% endif %}
+              </td>
+              <td>{{ c.parent_code|default:"—" }}</td>
+              <td>
+                <form method="post" action="{% url 'category_delete' c.code %}" class="d-inline" onsubmit="return confirm('确认删除该类目？');">
+                  {% csrf_token %}
+                  <button class="btn btn-sm btn-outline-danger">删除</button>
+                </form>
+              </td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <a class="btn btn-link btn-sm" href="{% url 'admin_dashboard' %}">← 返回仪表盘</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

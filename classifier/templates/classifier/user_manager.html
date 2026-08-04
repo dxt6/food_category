@@ -1,0 +1,35 @@
+{% extends "classifier/base.html" %}
+{% block title %}权限管理{% endblock %}
+{% block content %}
+<div class="ek-layout">
+  {% include "classifier/admin_sidebar.html" with active="user" %}
+  <div>
+    <h4 class="mb-3 reveal">④ 基础权限管理 · 账号</h4>
+    <div class="card p-3 reveal">
+      <div class="ek-table-wrap">
+        <table class="table table-sm">
+          <thead><tr><th>用户名</th><th>角色</th><th>操作</th></tr></thead>
+          <tbody>
+          {% for u in users %}
+            <tr>
+              <td>{{ u.username }}</td>
+              <td>{% if u.profile.role == 'admin' %}<span class="badge bg-success">管理员</span>{% else %}<span class="badge bg-secondary">学生</span>{% endif %}</td>
+              <td>
+                <form method="post" action="{% url 'user_role' u.id %}" class="d-inline">
+                  {% csrf_token %}
+                  <select name="role" class="form-select form-select-sm d-inline w-auto" onchange="this.form.submit()">
+                    <option value="student" {% if u.profile.role == 'student' %}selected{% endif %}>学生</option>
+                    <option value="admin" {% if u.profile.role == 'admin' %}selected{% endif %}>管理员</option>
+                  </select>
+                </form>
+              </td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <a class="btn btn-link btn-sm" href="{% url 'admin_dashboard' %}">← 返回仪表盘</a>
+    </div>
+  </div>
+</div>
+{% endblock %}
