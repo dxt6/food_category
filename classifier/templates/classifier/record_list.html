@@ -23,7 +23,7 @@
           <tbody>
           {% for r in records %}
             <tr><td class="small">{{ r.created_at|date:"m-d H:i" }}</td>
-                <td>{{ r.input_text|truncatechars:24 }}</td>
+                <td title="{{ r.input_text }}">{{ r.input_text|truncatechars:24 }}</td>
                 <td>{{ r.predicted_name }}({{ r.predicted_code }})</td>
                 <td>{{ r.confidence|floatformat:3 }}</td>
                 <td>{{ r.model_name }}</td>

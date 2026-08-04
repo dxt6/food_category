@@ -5,14 +5,16 @@
   <!-- 左：智能分类演示 -->
   <div class="col-lg-7">
     <div class="card p-4 mb-3 reveal">
-      <h5 class="mb-3">① 文本采集上传 & ③ 智能分类演示</h5>
-      <form method="post">
+      <h5 class="mb-1">智能食品分类</h5>
+      <p class="small text-muted mb-3">输入食品名称、配料或品类描述，系统将推理其所属三级类目。</p>
+      <form method="post" id="inferForm">
         {% csrf_token %}
-        <label class="form-label">输入食品名称 / 描述（如：乐事薯片原味马铃薯膨化零食）</label>
-        <textarea class="form-control" name="food_text" rows="3" placeholder="可输入食品名称与品类描述，系统将一键推理所属三级类目">{{ result.text }}</textarea>
+        <label class="form-label" for="id_food_text">食品文本</label>
+        <textarea id="id_food_text" class="form-control" name="food_text" rows="3" placeholder="如：原味薯片，马铃薯制作的膨化休闲食品">{{ result.text }}</textarea>
         <div class="mt-3 d-flex gap-2">
-          <button class="btn btn-success" type="submit">一键 AI 推理</button>
+          <button class="btn btn-success" type="submit" data-loading-text="推理中…">一键 AI 推理</button>
           <a href="{% url 'demo_home' %}" class="btn btn-outline-secondary">清空</a>
+          <button type="button" class="btn btn-link btn-sm ms-auto" onclick="document.getElementById('id_food_text').value='原味薯片，马铃薯制作的膨化休闲食品'">填入示例</button>
         </div>
       </form>
 
@@ -34,15 +36,16 @@
             <span>{{ result.pred.confidence|floatformat:1 }}%</span>
           </div>
           <div class="small text-muted">
-            置信度<br><b style="color:var(--text);font-size:1.05rem">{{ result.pred.confidence|floatformat:3 }}</b>
+            置信度<br><b style="color:var(--text);font-size:1.05rem">{{ result.pred.confidence|floatformat:1 }}%</b>
             <div class="mt-1">使用模型：{{ result.pred.model_name }}（默认：{{ default_model }}）</div>
           </div>
         </div>
+        <p class="small text-muted mt-3 mb-0">模型输出为统计推断结果，建议结合食品描述与样本进一步判断。</p>
         <div class="ek-topk">
           <h6>Top-3 候选</h6>
           <ul>
             {% for t in result.pred.top_k %}
-              <li><span>{{ t.name }}（{{ t.code }}）</span><span class="ek-tc">{{ t.confidence|floatformat:3 }}</span></li>
+              <li><span>{{ t.name }}（{{ t.code }}）</span><span class="ek-tc">{{ t.confidence|floatformat:1 }}%</span></li>
             {% endfor %}
           </ul>
         </div>
@@ -60,9 +63,9 @@
         <div class="col-6"><div class="ek-stat"><div class="ek-num">{{ l2_count }}</div><div class="ek-label">二级类目</div></div></div>
         <div class="col-6"><div class="ek-stat"><div class="ek-num">{{ l3_count }}</div><div class="ek-label">三级类目</div></div></div>
         <div class="col-6"><div class="ek-stat"><div class="ek-num">{{ sample_count }}</div><div class="ek-label">标注样本</div></div></div>
+        <div class="col-6"><div class="ek-stat"><div class="ek-num">{{ total_records }}</div><div class="ek-label">累计推理</div></div></div>
       </div>
       <hr>
-      <div class="small text-muted mb-2">累计分类推理：<b style="color:var(--text)">{{ total_records }}</b> 次</div>
       {% if dist %}
       <h6 class="mt-3 small text-muted">一级类目推理占比</h6>
       <div class="ek-dist">
@@ -75,6 +78,8 @@
           </div>
         {% endfor %}
       </div>
+      {% else %}
+      <div class="text-muted small py-3 text-center">暂无推理分布数据</div>
       {% endif %}
     </div>
     {% if role == 'admin' %}

@@ -15,13 +15,13 @@
     <div class="card p-3 reveal">
       <div class="ek-table-wrap">
         <table class="table table-sm table-hover">
-          <thead><tr><th>名称</th><th>描述</th><th>三级类目</th><th>来源</th></tr></thead>
+          <thead><tr><th>名称</th><th>描述</th><th>三级类目</th><th>来源</th><th>创建时间</th></tr></thead>
           <tbody>
           {% for s in samples %}
             <tr><td>{{ s.name }}</td><td class="small">{{ s.description|truncatechars:30 }}</td>
                 <td><code>{{ s.category.code }}</code> {{ s.category.name }}</td>
-                <td>{{ s.get_source_display }}</td></tr>
-          {% empty %}<tr><td colspan="4" class="text-center py-4">
+                <td>{{ s.get_source_display }}</td><td class="small">{{ s.created_at|date:"m-d H:i" }}</td></tr>
+          {% empty %}<tr><td colspan="5" class="text-center py-4">
             <div class="text-muted mb-2">暂无样本数据</div>
             <a class="btn btn-sm btn-success" href="{% url 'sample_add' %}">+ 新增样本</a>
           </td></tr>{% endfor %}
