@@ -1,90 +1,136 @@
 {% extends "classifier/base.html" %}
-{% block title %}演示首页{% endblock %}
+{% block title %}智能分类演示 · 食品类别分类实训平台{% endblock %}
 {% block content %}
-<div class="row">
-  <!-- 左：智能分类演示 -->
-  <div class="col-lg-7">
-    <div class="card p-4 mb-3 reveal">
-      <h5 class="mb-1">智能食品分类</h5>
-      <p class="small text-muted mb-3">输入食品名称、配料或品类描述，系统将推理其所属三级类目。</p>
-      <form method="post" id="inferForm">
-        {% csrf_token %}
-        <label class="form-label" for="id_food_text">食品文本</label>
-        <textarea id="id_food_text" class="form-control" name="food_text" rows="3" placeholder="如：原味薯片，马铃薯制作的膨化休闲食品">{{ result.text }}</textarea>
-        <div class="mt-3 d-flex gap-2">
-          <button class="btn btn-success" type="submit" data-loading-text="推理中…">一键 AI 推理</button>
-          <a href="{% url 'demo_home' %}" class="btn btn-outline-secondary">清空</a>
-          <button type="button" class="btn btn-link btn-sm ms-auto" onclick="document.getElementById('id_food_text').value='原味薯片，马铃薯制作的膨化休闲食品'">填入示例</button>
-        </div>
-      </form>
-
-      {% if result.error %}
-        <div class="alert alert-warning mt-3">{{ result.error }}</div>
-      {% endif %}
-
-      {% if result and result.pred %}
-      <div class="ek-result mt-3 reveal">
-        <div class="d-flex align-items-center flex-wrap">
-          <span class="ek-pred-name">{{ result.pred.predicted_name }}</span>
-          <span class="ek-pred-code">{{ result.pred.predicted_code }}</span>
-        </div>
-        <div class="ek-path">类目路径：
-          {% for p in result.pred.path %}<b>{{ p }}</b>{% if not forloop.last %} <span style="opacity:.4">/</span> {% endif %}{% endfor %}
-        </div>
-        <div class="ek-conf-wrap">
-          <div class="ek-conf-ring" style="--p:{{ result.pred.confidence|floatformat:1 }}">
-            <span>{{ result.pred.confidence|floatformat:1 }}%</span>
-          </div>
-          <div class="small text-muted">
-            置信度<br><b style="color:var(--text);font-size:1.05rem">{{ result.pred.confidence|floatformat:1 }}%</b>
-            <div class="mt-1">使用模型：{{ result.pred.model_name }}（默认：{{ default_model }}）</div>
-          </div>
-        </div>
-        <p class="small text-muted mt-3 mb-0">模型输出为统计推断结果，建议结合食品描述与样本进一步判断。</p>
-        <div class="ek-topk">
-          <h6>Top-3 候选</h6>
-          <ul>
-            {% for t in result.pred.top_k %}
-              <li><span>{{ t.name }}（{{ t.code }}）</span><span class="ek-tc">{{ t.confidence|floatformat:1 }}%</span></li>
-            {% endfor %}
-          </ul>
-        </div>
-      </div>
-      {% endif %}
-    </div>
+<header class="page-hero reveal">
+  <div>
+    <span class="eyebrow"><i class="bi bi-stars"></i> 文本智能分类实训</span>
+    <h1>智能食品分类</h1>
+    <p>输入食品名称、配料或品类描述，观察模型如何完成三级类目判断。</p>
   </div>
+  <div class="hero-meta">
+    <span><i class="bi bi-cpu"></i>当前模型 <strong>{{ default_model|upper }}</strong></span>
+    <span><i class="bi bi-database-check"></i>{{ sample_count }} 条标注样本</span>
+  </div>
+</header>
 
-  <!-- 右：基础数据展示 -->
-  <div class="col-lg-5">
-    <div class="card p-4 mb-3 reveal">
-      <h5 class="mb-3">④ 基础数据展示</h5>
-      <div class="row g-2 text-center">
-        <div class="col-6"><div class="ek-stat"><div class="ek-num">{{ l1_count }}</div><div class="ek-label">一级类目</div></div></div>
-        <div class="col-6"><div class="ek-stat"><div class="ek-num">{{ l2_count }}</div><div class="ek-label">二级类目</div></div></div>
-        <div class="col-6"><div class="ek-stat"><div class="ek-num">{{ l3_count }}</div><div class="ek-label">三级类目</div></div></div>
-        <div class="col-6"><div class="ek-stat"><div class="ek-num">{{ sample_count }}</div><div class="ek-label">标注样本</div></div></div>
-        <div class="col-6"><div class="ek-stat"><div class="ek-num">{{ total_records }}</div><div class="ek-label">累计推理</div></div></div>
+<div class="demo-layout">
+  <section class="demo-workspace surface-card reveal" aria-labelledby="inferenceTitle">
+    <div class="panel-heading">
+      <div>
+        <span class="step-label">STEP 01</span>
+        <h2 id="inferenceTitle">采集食品文本</h2>
+        <p>描述越具体，模型越容易识别所属品类。</p>
       </div>
-      <hr>
-      {% if dist %}
-      <h6 class="mt-3 small text-muted">一级类目推理占比</h6>
-      <div class="ek-dist">
-        {% for d in dist %}
-          {% widthratio d.count total_records 100 as pct %}
-          <div class="ek-row">
-            <span>{{ d.name|truncatechars:6 }}</span>
-            <span class="ek-track"><span class="ek-fill" style="width:{% if pct > 100 %}100{% else %}{{ pct }}{% endif %}%"></span></span>
-            <span class="ek-cnt">{{ d.count }}</span>
-          </div>
-        {% endfor %}
-      </div>
-      {% else %}
-      <div class="text-muted small py-3 text-center">暂无推理分布数据</div>
-      {% endif %}
+      <span class="section-icon"><i class="bi bi-input-cursor-text"></i></span>
     </div>
-    {% if role == 'admin' %}
-    <a href="{% url 'admin_dashboard' %}" class="btn btn-outline-success w-100 reveal">进入 PC 管理后台 →</a>
+    <form method="post" enctype="multipart/form-data" id="inferenceForm" data-loading-form data-loading-text="模型推理中…">
+      {% csrf_token %}
+      <label class="form-label" for="foodText">食品名称 / 配料 / 品类描述</label>
+      <textarea class="form-control inference-textarea" id="foodText" name="food_text" rows="6" maxlength="2000" placeholder="例如：原味薯片，以马铃薯为主要原料的膨化休闲食品">{% if result.text %}{{ result.text }}{% endif %}</textarea>
+      <div class="textarea-footer">
+        <div class="example-prompts" aria-label="示例文本">
+          <span>快速示例</span>
+          <button type="button" class="prompt-chip" data-prompt="原味薯片，以马铃薯为主要原料的膨化休闲食品">薯片</button>
+          <button type="button" class="prompt-chip" data-prompt="低温酸奶，含乳酸菌的发酵乳制品，冷藏保存">酸奶</button>
+          <button type="button" class="prompt-chip" data-prompt="小麦粉制作的速冻猪肉水饺，加热后食用">水饺</button>
+        </div>
+        <span class="char-count" id="charCount">0 / 2000</span>
+      </div>
+      <div class="file-import">
+        <div class="file-import-copy">
+          <i class="bi bi-file-earmark-arrow-up"></i>
+          <div><strong>导入食品成分表文本</strong><span>支持 TXT、CSV、MD，最大 2 MB</span></div>
+        </div>
+        <label class="btn btn-secondary btn-sm" for="foodFile">选择文件</label>
+        <input class="visually-hidden" type="file" id="foodFile" name="food_file" accept=".txt,.csv,.md,text/plain,text/csv">
+        <span class="file-name" id="fileName" aria-live="polite"></span>
+      </div>
+      <div class="form-actions">
+        <button class="btn btn-primary btn-lg" type="submit"><i class="bi bi-stars"></i><span>一键 AI 推理</span></button>
+        <a class="btn btn-secondary btn-lg" href="{% url 'demo_home' %}"><i class="bi bi-arrow-counterclockwise"></i>清空</a>
+      </div>
+    </form>
+
+    {% if result.error %}
+      <div class="alert app-alert app-alert-warning result-message" role="alert"><i class="bi bi-exclamation-triangle"></i><span>{{ result.error }}</span></div>
     {% endif %}
-  </div>
+
+    {% if result and result.pred %}
+      <section class="result-panel reveal" aria-labelledby="resultTitle">
+        <div class="result-kicker"><i class="bi bi-check2-circle"></i>推理完成</div>
+        <div class="result-header">
+          <div>
+            <span class="step-label">STEP 02 · 分类结果</span>
+            <h2 id="resultTitle">{{ result.pred.predicted_name }}</h2>
+            <code>{{ result.pred.predicted_code }}</code>
+          </div>
+          <div class="confidence-summary">
+            <strong>{{ result.pred.confidence_pct|floatformat:1 }}%</strong>
+            <span>模型置信度</span>
+          </div>
+        </div>
+          <div class="category-path" aria-label="类目路径">
+            <i class="bi bi-diagram-3"></i>
+          {% for p in result.pred.path_items %}<span>{{ p }}</span>{% if not forloop.last %}<i class="bi bi-chevron-right"></i>{% endif %}{% endfor %}
+          </div>
+        <div class="confidence-track" role="progressbar" aria-label="模型置信度" aria-valuenow="{{ result.pred.confidence_pct|floatformat:1 }}" aria-valuemin="0" aria-valuemax="100">
+          <span style="width: {{ result.pred.confidence_pct|floatformat:1 }}%"></span>
+        </div>
+        <div class="result-meta"><span><i class="bi bi-cpu"></i>推理模型：{{ result.pred.model_name|upper }}</span><span><i class="bi bi-clock"></i>结果已写入实训记录</span></div>
+        <div class="candidate-list">
+          <div class="candidate-heading"><h3>Top-3 候选类目</h3><span>按置信度排序</span></div>
+          {% for item in result.pred.top_k %}
+            <div class="candidate-row {% if forloop.first %}is-best{% endif %}">
+              <span class="candidate-rank">0{{ forloop.counter }}</span>
+              <div><strong>{{ item.name }}</strong><code>{{ item.code }}</code></div>
+              <span class="candidate-score">{{ item.confidence_pct|floatformat:1 }}%</span>
+            </div>
+          {% endfor %}
+        </div>
+      </section>
+    {% endif %}
+  </section>
+
+  <aside class="demo-insights reveal" aria-label="实训数据概览">
+    <section class="surface-card summary-panel">
+      <div class="panel-heading compact">
+        <div><span class="step-label">DATA OVERVIEW</span><h2>实训数据概览</h2></div>
+        <span class="live-dot"><i></i>数据已同步</span>
+      </div>
+      <div class="stat-grid">
+        <div class="stat-card"><span class="stat-icon mint"><i class="bi bi-layers"></i></span><div><strong>{{ l1_count }}</strong><span>一级类目</span></div></div>
+        <div class="stat-card"><span class="stat-icon blue"><i class="bi bi-diagram-2"></i></span><div><strong>{{ l2_count }}</strong><span>二级类目</span></div></div>
+        <div class="stat-card"><span class="stat-icon violet"><i class="bi bi-diagram-3"></i></span><div><strong>{{ l3_count }}</strong><span>三级类目</span></div></div>
+        <div class="stat-card"><span class="stat-icon amber"><i class="bi bi-database"></i></span><div><strong>{{ sample_count }}</strong><span>标注样本</span></div></div>
+      </div>
+      <div class="total-records">
+        <div><span>累计分类推理</span><strong>{{ total_records }}<small>次</small></strong></div>
+        <span class="total-icon"><i class="bi bi-activity"></i></span>
+      </div>
+    </section>
+
+    <section class="surface-card distribution-panel">
+      <div class="panel-heading compact">
+        <div><span class="step-label">CATEGORY DISTRIBUTION</span><h2>一级类目推理分布</h2></div>
+      </div>
+      {% if dist %}
+        <div class="distribution-list">
+          {% for d in dist %}
+            {% widthratio d.count total_records 100 as pct %}
+            <div class="distribution-item">
+              <div><strong>{{ d.name }}</strong><span>{{ d.count }} 次 · {{ pct }}%</span></div>
+              <div class="distribution-track"><span style="width: {{ pct }}%"></span></div>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="empty-state compact"><i class="bi bi-bar-chart"></i><strong>暂无推理记录</strong><span>完成首次分类后，这里将展示品类分布。</span></div>
+      {% endif %}
+    </section>
+
+    {% if user.profile.role == 'admin' %}
+      <a class="admin-entry" href="{% url 'admin_dashboard' %}"><span><i class="bi bi-grid-1x2"></i><span><strong>进入管理后台</strong><small>管理类目、样本、模型与记录</small></span></span><i class="bi bi-arrow-right"></i></a>
+    {% endif %}
+  </aside>
 </div>
 {% endblock %}

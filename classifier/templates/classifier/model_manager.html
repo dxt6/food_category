@@ -1,40 +1,41 @@
 {% extends "classifier/base.html" %}
-{% block title %}模型管理{% endblock %}
+{% block title %}模型管理 · 食品类别分类实训平台{% endblock %}
 {% block content %}
-<div class="ek-layout">
+<div class="admin-layout">
   {% include "classifier/admin_sidebar.html" with active="model" %}
-  <div>
-    <h4 class="mb-3 reveal">② 样本与模型管理 · 模型</h4>
-    <div class="card p-3 reveal">
-      <p class="small text-muted">当前默认推理模型：<b>{{ default }}</b>（演示端将使用此模型进行一键推理）</p>
-      <div class="ek-table-wrap">
-        <table class="table table-sm">
-          <thead><tr><th>模型</th><th>测试准确率</th><th>训练/测试样本</th><th>操作</th></tr></thead>
+  <div class="admin-content">
+    <header class="admin-page-head reveal">
+      <div><span class="eyebrow"><i class="bi bi-cpu"></i> 机器学习模型</span><h1>模型管理</h1><p>查看评测结果、切换默认推理模型或使用最新数据重新训练。</p></div>
+      <div class="admin-actions"><span class="badge badge-soft-primary"><i class="bi bi-check-circle"></i>当前默认：{{ default|upper }}</span></div>
+    </header>
+    <div class="surface-card table-card reveal">
+      <div class="table-responsive">
+        <table class="table app-table">
+          <thead><tr><th scope="col">模型</th><th scope="col">测试准确率</th><th scope="col">训练样本</th><th scope="col">测试样本</th><th scope="col">状态</th><th scope="col" class="text-end">操作</th></tr></thead>
           <tbody>
-          {% for m in models %}
-            <tr>
-              <td>{{ m.model_name }}{% if m.model_name == default %} <span class="badge bg-success">默认</span>{% endif %}</td>
-              <td>{{ m.accuracy|floatformat:4 }}</td>
-              <td>{{ m.train_samples }} / {{ m.test_samples }}</td>
-              <td>
-                <form method="post" action="{% url 'model_train' m.model_name %}" class="d-inline">{% csrf_token %}<button class="btn btn-sm btn-outline-primary" data-loading-text="训练中，请勿重复提交">重新训练</button></form>
-                {% if m.model_name != default %}
-                <form method="post" action="{% url 'model_set_default' m.model_name %}" class="d-inline">{% csrf_token %}<button class="btn btn-sm btn-outline-success">设为默认</button></form>
-                {% endif %}
-              </td>
-            </tr>
-          {% empty %}
-            <tr><td colspan="4">尚未训练模型，点击下方按钮训练。</td></tr>
-          {% endfor %}
+            {% for model in models %}
+              {% widthratio model.accuracy 1 100 as accuracy_pct %}
+              <tr>
+                <td><div class="cell-main"><strong>{{ model.model_name|upper }}</strong><small>{% if model.model_name == 'svm' %}支持向量机{% else %}随机森林{% endif %}</small></div></td>
+                <td><span class="accuracy">{{ accuracy_pct }}%</span></td>
+                <td>{{ model.train_samples }}</td><td>{{ model.test_samples }}</td>
+                <td>{% if model.model_name == default %}<span class="badge badge-soft-primary"><i class="bi bi-check-circle"></i>默认推理</span>{% else %}<span class="badge badge-soft-gray">可用</span>{% endif %}</td>
+                <td><div class="inline-actions justify-content-end"><form method="post" action="{% url 'model_train' model.model_name %}" data-confirm="重新训练 {{ model.model_name|upper }} 可能需要一些时间，确认继续？" data-loading-form data-loading-text="训练中…">{% csrf_token %}<button class="btn btn-secondary btn-sm" type="submit"><i class="bi bi-arrow-repeat"></i><span>重新训练</span></button></form>{% if model.model_name != default %}<form method="post" action="{% url 'model_set_default' model.model_name %}" data-confirm="将 {{ model.model_name|upper }} 设置为学生端默认推理模型？">{% csrf_token %}<button class="btn btn-primary btn-sm" type="submit">设为默认</button></form>{% endif %}</div></td>
+              </tr>
+            {% empty %}
+              <tr><td colspan="6"><div class="empty-state"><i class="bi bi-cpu"></i><strong>尚未训练模型</strong><span>使用下方按钮训练 SVM 或随机森林模型。</span></div></td></tr>
+            {% endfor %}
           </tbody>
         </table>
       </div>
-      <div class="mt-2">
-        <form method="post" action="{% url 'model_train' 'svm' %}" class="d-inline">{% csrf_token %}<button class="btn btn-success btn-sm">训练 SVM</button></form>
-        <form method="post" action="{% url 'model_train' 'rf' %}" class="d-inline">{% csrf_token %}<button class="btn btn-success btn-sm">训练 随机森林</button></form>
-        <a class="btn btn-link btn-sm" href="{% url 'admin_dashboard' %}">← 返回仪表盘</a>
-      </div>
     </div>
+    <section class="surface-card content-card mt-3 reveal">
+      <div class="content-card-head"><div><h2>训练新模型</h2><p>模型训练为同步操作，执行期间请勿关闭页面或重复提交。</p></div></div>
+      <div class="admin-actions justify-content-start">
+        <form method="post" action="{% url 'model_train' 'svm' %}" data-confirm="使用当前数据集训练 SVM 模型？" data-loading-form data-loading-text="训练 SVM 中…">{% csrf_token %}<button class="btn btn-primary" type="submit"><i class="bi bi-cpu"></i><span>训练 SVM</span></button></form>
+        <form method="post" action="{% url 'model_train' 'rf' %}" data-confirm="使用当前数据集训练随机森林模型？" data-loading-form data-loading-text="训练随机森林中…">{% csrf_token %}<button class="btn btn-secondary" type="submit"><i class="bi bi-diagram-3"></i><span>训练随机森林</span></button></form>
+      </div>
+    </section>
   </div>
 </div>
 {% endblock %}

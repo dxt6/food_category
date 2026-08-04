@@ -1,24 +1,20 @@
 {% extends "classifier/base.html" %}
-{% block title %}新增样本{% endblock %}
+{% block title %}新增样本 · 食品类别分类实训平台{% endblock %}
 {% block content %}
-<div class="row justify-content-center">
-  <div class="col-md-7">
-    <div class="card p-4">
-      <h5>新增食品样本（可用于扩充训练数据）</h5>
-      <form method="post">
+<div class="admin-layout">
+  {% include "classifier/admin_sidebar.html" with active="sample" %}
+  <div class="admin-content">
+    <header class="admin-page-head reveal"><div><span class="eyebrow"><i class="bi bi-plus-circle"></i> 样本管理</span><h1>新增食品样本</h1><p>新增样本用于扩充数据集；重新训练模型后才会影响分类结果。</p></div></header>
+    <section class="surface-card form-card reveal">
+      <div class="form-card-head"><span class="section-icon"><i class="bi bi-file-earmark-text"></i></span><div><h2>样本标注</h2><p>名称和描述应准确、具体，并选择对应的三级类目。</p></div></div>
+      <form method="post" class="form-grid" data-loading-form data-loading-text="正在保存…">
         {% csrf_token %}
-        <div class="mb-2"><label class="form-label">食品名称</label>
-          <input class="form-control" name="name" required></div>
-        <div class="mb-2"><label class="form-label">品类描述</label>
-          <textarea class="form-control" name="desc" rows="3"></textarea></div>
-        <div class="mb-3"><label class="form-label">所属三级类目</label>
-          <select class="form-select" name="category" required>
-            {% for c in cats %}<option value="{{ c.code }}">{{ c.code }} {{ c.name }}</option>{% endfor %}
-          </select></div>
-        <button class="btn btn-success w-100">保存样本</button>
-        <a class="btn btn-link btn-sm mt-2" href="{% url 'sample_list' %}">← 返回</a>
+        <div class="full"><label class="form-label" for="sampleName">食品名称</label><input class="form-control" id="sampleName" name="name" placeholder="例如：原味马铃薯片" maxlength="128" required></div>
+        <div class="full"><label class="form-label" for="sampleDesc">品类描述</label><textarea class="form-control" id="sampleDesc" name="desc" rows="4" placeholder="可填写主要原料、加工方式、口味和包装特征"></textarea><span class="help-text">更完整的描述通常能提供更有效的训练特征。</span></div>
+        <div class="full"><label class="form-label" for="sampleCategory">所属三级类目</label><select class="form-select" id="sampleCategory" name="category" required><option value="" selected disabled>请选择三级类目</option>{% for category in cats %}<option value="{{ category.code }}">{{ category.code }} · {{ category.name }}</option>{% endfor %}</select></div>
+        <div class="full form-actions"><button class="btn btn-primary" type="submit"><i class="bi bi-check2"></i><span>保存样本</span></button><a class="btn btn-secondary" href="{% url 'sample_list' %}">取消</a></div>
       </form>
-    </div>
+    </section>
   </div>
 </div>
 {% endblock %}

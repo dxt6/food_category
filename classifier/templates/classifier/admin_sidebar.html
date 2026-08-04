@@ -1,10 +1,17 @@
-{% comment %}后台统一侧边栏片段；调用方传 active=xxx {% endcomment %}
-<aside class="ek-side reveal">
-  <div class="ek-side-title">实训管理</div>
-  <a class="ek-navlink {% if active == 'dashboard' %}active{% endif %}" href="{% url 'admin_dashboard' %}"><span class="ek-ico">▦</span>仪表盘</a>
-  <a class="ek-navlink {% if active == 'category' %}active{% endif %}" href="{% url 'category_list' %}"><span class="ek-ico">⛃</span>品类管理</a>
-  <a class="ek-navlink {% if active == 'sample' %}active{% endif %}" href="{% url 'sample_list' %}"><span class="ek-ico">❏</span>样本管理</a>
-  <a class="ek-navlink {% if active == 'model' %}active{% endif %}" href="{% url 'model_manager' %}"><span class="ek-ico">⚙</span>模型管理</a>
-  <a class="ek-navlink {% if active == 'record' %}active{% endif %}" href="{% url 'record_list' %}"><span class="ek-ico">☰</span>记录查询</a>
-  <a class="ek-navlink {% if active == 'user' %}active{% endif %}" href="{% url 'user_manager' %}"><span class="ek-ico">👤</span>权限管理</a>
+<aside class="admin-sidebar reveal" aria-label="管理后台导航">
+  <div class="sidebar-heading">
+    <span>管理工作台</span>
+    <small>TRAINING CONSOLE</small>
+  </div>
+  <nav class="sidebar-nav">
+    <a class="sidebar-link {% if active == 'dashboard' %}active{% endif %}" href="{% url 'admin_dashboard' %}" {% if active == 'dashboard' %}aria-current="page"{% endif %}><i class="bi bi-grid-1x2"></i><span>仪表盘</span></a>
+    <a class="sidebar-link {% if active == 'category' %}active{% endif %}" href="{% url 'category_list' %}" {% if active == 'category' %}aria-current="page"{% endif %}><i class="bi bi-diagram-3"></i><span>品类管理</span></a>
+    <a class="sidebar-link {% if active == 'sample' %}active{% endif %}" href="{% url 'sample_list' %}" {% if active == 'sample' %}aria-current="page"{% endif %}><i class="bi bi-collection"></i><span>样本管理</span></a>
+    <a class="sidebar-link {% if active == 'model' %}active{% endif %}" href="{% url 'model_manager' %}" {% if active == 'model' %}aria-current="page"{% endif %}><i class="bi bi-cpu"></i><span>模型管理</span></a>
+    <a class="sidebar-link {% if active == 'record' %}active{% endif %}" href="{% url 'record_list' %}" {% if active == 'record' %}aria-current="page"{% endif %}><i class="bi bi-clock-history"></i><span>记录查询</span></a>
+    <a class="sidebar-link {% if active == 'user' %}active{% endif %}" href="{% url 'user_manager' %}" {% if active == 'user' %}aria-current="page"{% endif %}><i class="bi bi-people"></i><span>权限管理</span></a>
+  </nav>
+  <div class="sidebar-bottom">
+    <a href="{% url 'demo_home' %}"><i class="bi bi-stars"></i><span>返回分类演示</span><i class="bi bi-arrow-up-right"></i></a>
+  </div>
 </aside>

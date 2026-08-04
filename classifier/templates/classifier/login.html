@@ -1,30 +1,50 @@
 {% extends "classifier/base.html" %}
-{% block title %}登录{% endblock %}
+{% block title %}登录 · 食品类别分类实训平台{% endblock %}
 {% block content %}
-<div class="row justify-content-center">
-  <div class="col-md-5">
-    <div class="card p-4 mt-5 reveal">
-      <div class="text-center mb-3">
-        <div style="font-size:1.5rem">🍱 食品类别分类实训系统</div>
-        <div class="small text-muted mt-1">输入食品文本，体验机器学习三级类目智能分类</div>
-      </div>
-      {% if error %}<div class="alert alert-danger">{{ error }}</div>{% endif %}
-      <form method="post" id="loginForm">
-        {% csrf_token %}
-        <div class="mb-3">
-          <label class="form-label" for="id_username">用户名</label>
-          <input id="id_username" class="form-control" name="username" value="{{ username|default:'' }}" autocomplete="username" required autofocus>
-        </div>
-        <div class="mb-3">
-          <label class="form-label" for="id_password">密码</label>
-          <input id="id_password" type="password" class="form-control" name="password" autocomplete="current-password" required>
-        </div>
-        <button id="loginBtn" class="btn btn-success w-100" type="submit">登录</button>
-      </form>
-      <div class="mt-3 small text-muted text-center" style="opacity:.8">
-        演示账号：student / student123（学生）　admin / admin123（管理员）
-      </div>
+<section class="login-layout">
+  <div class="login-intro reveal">
+    <span class="eyebrow"><i class="bi bi-stars"></i> AI 教学实训</span>
+    <h1>从一段食品描述，<br>理解一次机器学习分类。</h1>
+    <p>面向食品智能分类课程的轻量化实训平台，完整演示文本采集、模型推理、三级品类判定和数据复盘。</p>
+    <div class="login-feature-list" aria-label="平台特点">
+      <span><i class="bi bi-check2-circle"></i>三级食品类目体系</span>
+      <span><i class="bi bi-check2-circle"></i>SVM / 随机森林模型</span>
+      <span><i class="bi bi-check2-circle"></i>推理过程与置信度可视化</span>
     </div>
   </div>
-</div>
+  <div class="login-card surface-card reveal">
+    <div class="login-card-head">
+      <span class="section-icon"><i class="bi bi-person-lock"></i></span>
+      <div>
+        <h2>欢迎回来</h2>
+        <p>使用实训账号进入系统</p>
+      </div>
+    </div>
+    {% if error %}
+      <div class="alert app-alert app-alert-danger" role="alert"><i class="bi bi-exclamation-circle"></i><span>{{ error }}</span></div>
+    {% endif %}
+    <form method="post" class="stack-form" data-loading-form data-loading-text="正在登录…">
+      {% csrf_token %}
+      <div>
+        <label class="form-label" for="username">用户名</label>
+        <div class="input-with-icon">
+          <i class="bi bi-person" aria-hidden="true"></i>
+          <input class="form-control" id="username" name="username" autocomplete="username" value="{{ request.POST.username }}" placeholder="请输入用户名" required autofocus>
+        </div>
+      </div>
+      <div>
+        <label class="form-label" for="password">密码</label>
+        <div class="input-with-icon">
+          <i class="bi bi-key" aria-hidden="true"></i>
+          <input type="password" class="form-control" id="password" name="password" autocomplete="current-password" placeholder="请输入密码" required>
+        </div>
+      </div>
+      <button class="btn btn-primary btn-lg w-100" type="submit"><i class="bi bi-arrow-right-circle"></i><span>进入实训平台</span></button>
+    </form>
+    <div class="demo-account">
+      <div><span>学生账号</span><code>student / student123</code></div>
+      <div><span>管理员账号</span><code>admin / admin123</code></div>
+    </div>
+  </div>
+</section>
 {% endblock %}

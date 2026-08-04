@@ -1,54 +1,52 @@
 {% extends "classifier/base.html" %}
-{% block title %}管理后台{% endblock %}
+{% block title %}管理仪表盘 · 食品类别分类实训平台{% endblock %}
 {% block content %}
-<div class="ek-layout">
-  <!-- 侧边栏：五大模块导航 -->
-  <aside class="ek-side reveal">
-    <div class="ek-side-title">实训管理</div>
-    <a class="ek-navlink active" href="{% url 'admin_dashboard' %}"><span class="ek-ico">▦</span>仪表盘</a>
-    <a class="ek-navlink" href="{% url 'category_list' %}"><span class="ek-ico">⛃</span>品类管理</a>
-    <a class="ek-navlink" href="{% url 'sample_list' %}"><span class="ek-ico">❏</span>样本管理</a>
-    <a class="ek-navlink" href="{% url 'model_manager' %}"><span class="ek-ico">⚙</span>模型管理</a>
-    <a class="ek-navlink" href="{% url 'record_list' %}"><span class="ek-ico">☰</span>记录查询</a>
-    <a class="ek-navlink" href="{% url 'user_manager' %}"><span class="ek-ico">👤</span>权限管理</a>
-  </aside>
+<div class="admin-layout">
+  {% include "classifier/admin_sidebar.html" with active="dashboard" %}
+  <div class="admin-content">
+    <header class="admin-page-head reveal">
+      <div><span class="eyebrow"><i class="bi bi-grid-1x2"></i> 管理工作台</span><h1>实训数据仪表盘</h1><p>统一查看类目、样本、模型和实训操作状态。</p></div>
+      <div class="admin-actions"><a class="btn btn-secondary" href="{% url 'demo_home' %}"><i class="bi bi-stars"></i>前往分类演示</a></div>
+    </header>
 
-  <div>
-    <h4 class="mb-3 reveal">PC 管理后台 · 仪表盘</h4>
+    <section class="metric-grid" aria-label="核心数据指标">
+      <div class="metric-card reveal"><span class="stat-icon mint"><i class="bi bi-layers"></i></span><div><strong>{{ l1 }}</strong><span>一级类目</span></div></div>
+      <div class="metric-card reveal"><span class="stat-icon blue"><i class="bi bi-diagram-2"></i></span><div><strong>{{ l2 }}</strong><span>二级类目</span></div></div>
+      <div class="metric-card reveal"><span class="stat-icon violet"><i class="bi bi-diagram-3"></i></span><div><strong>{{ l3 }}</strong><span>三级类目</span></div></div>
+      <div class="metric-card reveal"><span class="stat-icon amber"><i class="bi bi-database"></i></span><div><strong>{{ samples }}</strong><span>标注样本</span></div></div>
+      <div class="metric-card reveal"><span class="stat-icon blue"><i class="bi bi-activity"></i></span><div><strong>{{ records }}</strong><span>推理记录</span></div></div>
+      <div class="metric-card reveal"><span class="stat-icon mint"><i class="bi bi-people"></i></span><div><strong>{{ users }}</strong><span>系统账号</span></div></div>
+    </section>
 
-    <!-- 统计数字卡片 -->
-    <div class="row g-3 mb-4">
-      <div class="col-6 col-md-2"><div class="ek-stat reveal"><div class="ek-num">{{ l1 }}</div><div class="ek-label">一级类目</div></div></div>
-      <div class="col-6 col-md-2"><div class="ek-stat reveal"><div class="ek-num">{{ l2 }}</div><div class="ek-label">二级类目</div></div></div>
-      <div class="col-6 col-md-2"><div class="ek-stat reveal"><div class="ek-num">{{ l3 }}</div><div class="ek-label">三级类目</div></div></div>
-      <div class="col-6 col-md-2"><div class="ek-stat reveal"><div class="ek-num">{{ samples }}</div><div class="ek-label">标注样本</div></div></div>
-      <div class="col-6 col-md-2"><div class="ek-stat reveal"><div class="ek-num">{{ records }}</div><div class="ek-label">推理记录</div></div></div>
-      <div class="col-6 col-md-2"><div class="ek-stat reveal"><div class="ek-num">{{ users }}</div><div class="ek-label">账号数</div></div></div>
-    </div>
-
-    <div class="row g-3">
-      <div class="col-md-6">
-        <div class="card p-3 reveal">
-          <h6 class="mb-3">模型准确率</h6>
-          <p class="small text-muted">当前默认模型：<b>{{ default_model }}</b></p>
-          <ul class="mb-3">
+    <div class="admin-grid">
+      <section class="surface-card content-card reveal">
+        <div class="content-card-head"><div><h2>模型运行状态</h2><p>当前默认模型：{{ default_model|upper }}</p></div><a class="btn btn-secondary btn-sm" href="{% url 'model_manager' %}">管理模型</a></div>
+        {% if models %}
+          <div class="model-list">
             {% for m in models %}
-              <li class="mb-1">{{ m.model_name }}：测试准确率 {{ m.accuracy|floatformat:4 }}（样本 {{ m.train_samples }}+{{ m.test_samples }}）</li>
-            {% empty %}<li>尚未训练模型</li>{% endfor %}
-          </ul>
-          <a class="btn btn-sm btn-success" href="{% url 'model_manager' %}">前往模型管理</a>
-        </div>
-      </div>
-      <div class="col-md-6">
-        <div class="card p-3 reveal">
-          <h6 class="mb-3">最近操作日志</h6>
-          <ul class="small mb-0">
-            {% for l in logs %}
-              <li class="mb-1">[{{ l.created_at|date:"m-d H:i" }}] {{ l.action }} — {{ l.detail }}</li>
-            {% empty %}<li>暂无日志</li>{% endfor %}
-          </ul>
-        </div>
-      </div>
+              {% widthratio m.accuracy 1 100 as accuracy_pct %}
+              <div class="model-item">
+                <div><strong>{{ m.model_name|upper }} {% if m.model_name == default_model %}<span class="badge badge-soft-primary">默认</span>{% endif %}</strong><small>{{ m.train_samples }} 条训练 · {{ m.test_samples }} 条测试</small></div>
+                <span class="accuracy">{{ accuracy_pct }}%</span>
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <div class="empty-state compact"><i class="bi bi-cpu"></i><strong>尚未训练模型</strong><span>前往模型管理开始训练。</span></div>
+        {% endif %}
+      </section>
+      <section class="surface-card content-card reveal">
+        <div class="content-card-head"><div><h2>最近操作日志</h2><p>展示最近 10 条管理操作</p></div></div>
+        {% if logs %}
+          <div class="log-list">
+            {% for log in logs %}
+              <div class="log-item"><div><strong>{{ log.action }}</strong><small>{{ log.detail|truncatechars:42 }}</small></div><time>{{ log.created_at|date:"m-d H:i" }}</time></div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <div class="empty-state compact"><i class="bi bi-clock-history"></i><strong>暂无操作日志</strong><span>完成一次管理操作后将在此记录。</span></div>
+        {% endif %}
+      </section>
     </div>
   </div>
 </div>

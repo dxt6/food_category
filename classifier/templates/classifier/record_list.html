@@ -1,41 +1,32 @@
 {% extends "classifier/base.html" %}
-{% block title %}记录查询{% endblock %}
+{% block title %}记录查询 · 食品类别分类实训平台{% endblock %}
 {% block content %}
-<div class="ek-layout">
+<div class="admin-layout">
   {% include "classifier/admin_sidebar.html" with active="record" %}
-  <div>
-    <div class="d-flex justify-content-between align-items-center mb-3">
-      <h4 class="mb-0 reveal">③ 记录查询统计</h4>
-      <a class="btn btn-success btn-sm" href="{% url 'record_export' %}" data-loading-text="导出中…">导出 CSV</a>
+  <div class="admin-content">
+    <header class="admin-page-head reveal">
+      <div><span class="eyebrow"><i class="bi bi-clock-history"></i> 实训过程</span><h1>记录查询</h1><p>查看模型推理历史，按模型筛选并导出 CSV 用于课程复盘。</p></div>
+      <div class="admin-actions"><a class="btn btn-primary" href="{% url 'record_export' %}" data-download-feedback><i class="bi bi-download"></i>导出 CSV</a></div>
+    </header>
+    <div class="data-toolbar reveal">
+      <form method="get" class="filter-form"><label class="visually-hidden" for="modelFilter">按模型筛选</label><select class="form-select" id="modelFilter" name="model"><option value="">全部模型</option><option value="svm" {% if model_filter == 'svm' %}selected{% endif %}>SVM</option><option value="rf" {% if model_filter == 'rf' %}selected{% endif %}>随机森林</option></select><button class="btn btn-secondary" type="submit"><i class="bi bi-funnel"></i>应用筛选</button>{% if model_filter %}<a class="btn btn-link" href="{% url 'record_list' %}">清除</a>{% endif %}</form>
     </div>
-    <form method="get" class="mb-3 d-flex gap-2 reveal">
-      <select class="form-select w-auto" name="model">
-        <option value="">全部模型</option>
-        <option value="svm" {% if model_filter == 'svm' %}selected{% endif %}>svm</option>
-        <option value="rf" {% if model_filter == 'rf' %}selected{% endif %}>rf</option>
-      </select>
-      <button class="btn btn-outline-success">筛选</button>
-    </form>
-    <div class="card p-3 reveal">
-      <div class="ek-table-wrap">
-        <table class="table table-sm table-hover">
-          <thead><tr><th>时间</th><th>输入文本</th><th>预测类目</th><th>置信度</th><th>模型</th><th>操作人</th></tr></thead>
+    <div class="surface-card table-card reveal">
+      <div class="table-responsive">
+        <table class="table app-table">
+          <thead><tr><th scope="col">推理时间</th><th scope="col">输入文本</th><th scope="col">预测类目</th><th scope="col">置信度</th><th scope="col">模型</th><th scope="col">操作人</th></tr></thead>
           <tbody>
-          {% for r in records %}
-            <tr><td class="small">{{ r.created_at|date:"m-d H:i" }}</td>
-                <td title="{{ r.input_text }}">{{ r.input_text|truncatechars:24 }}</td>
-                <td>{{ r.predicted_name }}({{ r.predicted_code }})</td>
-                <td>{{ r.confidence|floatformat:3 }}</td>
-                <td>{{ r.model_name }}</td>
-                <td>{{ r.user.username|default:"—" }}</td></tr>
-          {% empty %}<tr><td colspan="6" class="text-center py-4">
-            <div class="text-muted">暂无推理记录</div>
-          </td></tr>{% endfor %}
+            {% for record in records %}
+              {% widthratio record.confidence 1 100 as confidence_pct %}
+              <tr><td><time>{{ record.created_at|date:"Y-m-d H:i" }}</time></td><td title="{{ record.input_text }}">{{ record.input_text|truncatechars:34 }}</td><td><div class="cell-main"><strong>{{ record.predicted_name }}</strong><small>{{ record.predicted_code }}</small></div></td><td><span class="accuracy">{{ confidence_pct }}%</span></td><td><span class="badge badge-soft-blue">{{ record.model_name|upper }}</span></td><td>{{ record.user.username|default:"—" }}</td></tr>
+            {% empty %}
+              <tr><td colspan="6"><div class="empty-state"><i class="bi bi-clock-history"></i><strong>暂无推理记录</strong><span>在分类演示页完成一次推理后，记录将显示在这里。</span></div></td></tr>
+            {% endfor %}
           </tbody>
         </table>
       </div>
-      <a class="btn btn-link btn-sm" href="{% url 'admin_dashboard' %}">← 返回仪表盘</a>
     </div>
+    {% include "classifier/pagination.html" %}
   </div>
 </div>
 {% endblock %}

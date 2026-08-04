@@ -1,34 +1,35 @@
 {% extends "classifier/base.html" %}
-{% block title %}权限管理{% endblock %}
+{% block title %}权限管理 · 食品类别分类实训平台{% endblock %}
 {% block content %}
-<div class="ek-layout">
+<div class="admin-layout">
   {% include "classifier/admin_sidebar.html" with active="user" %}
-  <div>
-    <h4 class="mb-3 reveal">④ 基础权限管理 · 账号</h4>
-    <div class="card p-3 reveal">
-      <div class="ek-table-wrap">
-        <table class="table table-sm">
-          <thead><tr><th>用户名</th><th>角色</th><th>操作</th></tr></thead>
+  <div class="admin-content">
+    <header class="admin-page-head reveal"><div><span class="eyebrow"><i class="bi bi-people"></i> 账号与权限</span><h1>权限管理</h1><p>为现有账号分配实训学生或后台管理员角色。</p></div></header>
+    <div class="surface-card table-card reveal">
+      <div class="table-responsive">
+        <table class="table app-table">
+          <thead><tr><th scope="col">用户</th><th scope="col">当前角色</th><th scope="col">账号状态</th><th scope="col" class="text-end">调整权限</th></tr></thead>
           <tbody>
-          {% for u in users %}
-            <tr>
-              <td>{{ u.username }}</td>
-              <td>{% if u.profile.role == 'admin' %}<span class="badge bg-success">管理员</span>{% else %}<span class="badge bg-secondary">学生</span>{% endif %}</td>
-              <td>
-                <form method="post" action="{% url 'user_role' u.id %}" class="d-inline">
-                  {% csrf_token %}
-                  <select name="role" class="form-select form-select-sm d-inline w-auto" onchange="this.form.submit()">
-                    <option value="student" {% if u.profile.role == 'student' %}selected{% endif %}>学生</option>
-                    <option value="admin" {% if u.profile.role == 'admin' %}selected{% endif %}>管理员</option>
-                  </select>
-                </form>
-              </td>
-            </tr>
-          {% endfor %}
+            {% for account in users %}
+              <tr>
+                <td><div class="cell-main"><strong>{{ account.username }} {% if account.id == user.id %}<span class="badge badge-soft-gray">当前账号</span>{% endif %}</strong><small>账号 ID：{{ account.id }}</small></div></td>
+                <td>{% if account.profile.role == 'admin' %}<span class="badge badge-soft-primary"><i class="bi bi-shield-check"></i>管理员</span>{% else %}<span class="badge badge-soft-blue"><i class="bi bi-mortarboard"></i>实训学生</span>{% endif %}</td>
+                <td>{% if account.is_active %}<span class="badge badge-soft-primary">正常</span>{% else %}<span class="badge badge-soft-gray">停用</span>{% endif %}</td>
+                <td>
+                  <form method="post" action="{% url 'user_role' account.id %}" class="filter-form justify-content-end" data-confirm="确认修改用户「{{ account.username }}」的角色？" data-loading-form data-loading-text="保存中…">
+                    {% csrf_token %}
+                    <label class="visually-hidden" for="role{{ account.id }}">{{ account.username }} 的角色</label>
+                    <select class="form-select form-select-sm w-auto" id="role{{ account.id }}" name="role"><option value="student" {% if account.profile.role == 'student' %}selected{% endif %}>实训学生</option><option value="admin" {% if account.profile.role == 'admin' %}selected{% endif %}>管理员</option></select>
+                    <button class="btn btn-secondary btn-sm" type="submit">保存</button>
+                  </form>
+                </td>
+              </tr>
+            {% empty %}
+              <tr><td colspan="4"><div class="empty-state"><i class="bi bi-people"></i><strong>暂无系统账号</strong><span>请先通过 Django 管理命令创建账号。</span></div></td></tr>
+            {% endfor %}
           </tbody>
         </table>
       </div>
-      <a class="btn btn-link btn-sm" href="{% url 'admin_dashboard' %}">← 返回仪表盘</a>
     </div>
   </div>
 </div>

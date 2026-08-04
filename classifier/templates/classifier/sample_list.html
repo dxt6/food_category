@@ -1,35 +1,31 @@
 {% extends "classifier/base.html" %}
-{% block title %}样本管理{% endblock %}
+{% block title %}样本管理 · 食品类别分类实训平台{% endblock %}
 {% block content %}
-<div class="ek-layout">
+<div class="admin-layout">
   {% include "classifier/admin_sidebar.html" with active="sample" %}
-  <div>
-    <div class="d-flex justify-content-between align-items-center mb-3">
-      <h4 class="mb-0 reveal">② 样本管理</h4>
-      <a class="btn btn-success btn-sm" href="{% url 'sample_add' %}">+ 新增样本</a>
+  <div class="admin-content">
+    <header class="admin-page-head reveal">
+      <div><span class="eyebrow"><i class="bi bi-collection"></i> 训练数据</span><h1>样本管理</h1><p>检索和扩充用于食品文本分类的标注样本。</p></div>
+      <div class="admin-actions"><a class="btn btn-primary" href="{% url 'sample_add' %}"><i class="bi bi-plus-lg"></i>新增样本</a></div>
+    </header>
+    <div class="data-toolbar reveal">
+      <form method="get" class="filter-form" role="search"><label class="visually-hidden" for="sampleSearch">按食品名称搜索</label><input class="form-control" id="sampleSearch" name="q" value="{{ q }}" placeholder="按食品名称搜索"><button class="btn btn-secondary" type="submit"><i class="bi bi-search"></i>搜索</button>{% if q %}<a class="btn btn-link" href="{% url 'sample_list' %}">清除</a>{% endif %}</form>
     </div>
-    <form method="get" class="mb-3 d-flex gap-2 reveal">
-      <input class="form-control" name="q" value="{{ q }}" placeholder="按食品名称搜索">
-      <button class="btn btn-outline-success">搜索</button>
-    </form>
-    <div class="card p-3 reveal">
-      <div class="ek-table-wrap">
-        <table class="table table-sm table-hover">
-          <thead><tr><th>名称</th><th>描述</th><th>三级类目</th><th>来源</th><th>创建时间</th></tr></thead>
+    <div class="surface-card table-card reveal">
+      <div class="table-responsive">
+        <table class="table app-table">
+          <thead><tr><th scope="col">食品名称</th><th scope="col">品类描述</th><th scope="col">三级类目</th><th scope="col">来源</th><th scope="col">创建时间</th></tr></thead>
           <tbody>
-          {% for s in samples %}
-            <tr><td>{{ s.name }}</td><td class="small">{{ s.description|truncatechars:30 }}</td>
-                <td><code>{{ s.category.code }}</code> {{ s.category.name }}</td>
-                <td>{{ s.get_source_display }}</td><td class="small">{{ s.created_at|date:"m-d H:i" }}</td></tr>
-          {% empty %}<tr><td colspan="5" class="text-center py-4">
-            <div class="text-muted mb-2">暂无样本数据</div>
-            <a class="btn btn-sm btn-success" href="{% url 'sample_add' %}">+ 新增样本</a>
-          </td></tr>{% endfor %}
+            {% for sample in samples %}
+              <tr><td><strong>{{ sample.name }}</strong></td><td title="{{ sample.description }}">{{ sample.description|default:"暂无描述"|truncatechars:42 }}</td><td><div class="cell-main"><strong>{{ sample.category.name }}</strong><small>{{ sample.category.code }}</small></div></td><td>{% if sample.source == 'user' %}<span class="badge badge-soft-primary">用户扩充</span>{% else %}<span class="badge badge-soft-gray">内置数据</span>{% endif %}</td><td class="text-muted">{{ sample.created_at|date:"Y-m-d" }}</td></tr>
+            {% empty %}
+              <tr><td colspan="5"><div class="empty-state"><i class="bi bi-collection"></i><strong>{% if q %}没有找到匹配样本{% else %}暂无食品样本{% endif %}</strong><span>{% if q %}请尝试更换关键词。{% else %}新增一个标注样本以扩充训练数据。{% endif %}</span></div></td></tr>
+            {% endfor %}
           </tbody>
         </table>
       </div>
-      <a class="btn btn-link btn-sm" href="{% url 'admin_dashboard' %}">← 返回仪表盘</a>
     </div>
+    {% include "classifier/pagination.html" %}
   </div>
 </div>
 {% endblock %}

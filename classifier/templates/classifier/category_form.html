@@ -1,31 +1,21 @@
 {% extends "classifier/base.html" %}
-{% block title %}新增类目{% endblock %}
+{% block title %}新增类目 · 食品类别分类实训平台{% endblock %}
 {% block content %}
-<div class="row justify-content-center">
-  <div class="col-md-6">
-    <div class="card p-4">
-      <h5>新增 / 更新类目</h5>
-      <form method="post">
+<div class="admin-layout">
+  {% include "classifier/admin_sidebar.html" with active="category" %}
+  <div class="admin-content">
+    <header class="admin-page-head reveal"><div><span class="eyebrow"><i class="bi bi-plus-circle"></i> 品类管理</span><h1>新增 / 更新类目</h1><p>若分类编码已存在，保存后将更新该类目的基础信息。</p></div></header>
+    <section class="surface-card form-card reveal">
+      <div class="form-card-head"><span class="section-icon"><i class="bi bi-diagram-3"></i></span><div><h2>类目信息</h2><p>请按“一级 01、二级 01-01、三级 01-01-01”的规则填写编码。</p></div></div>
+      <form method="post" class="form-grid" data-loading-form data-loading-text="正在保存…">
         {% csrf_token %}
-        <div class="mb-2"><label class="form-label">分类编码（如 01-01-01，已存在则更新）</label>
-          <input class="form-control" name="code" required></div>
-        <div class="mb-2"><label class="form-label">类目名称</label>
-          <input class="form-control" name="name" required></div>
-        <div class="mb-2"><label class="form-label">层级</label>
-          <select class="form-select" name="level">
-            <option value="1">一级类目</option>
-            <option value="2">二级类目</option>
-            <option value="3" selected>三级类目</option>
-          </select></div>
-        <div class="mb-3"><label class="form-label">父级编码（一级留空）</label>
-          <select class="form-select" name="parent_code">
-            <option value="">— 无 —</option>
-            {% for p in parents %}<option value="{{ p.code }}">{{ p.code }} {{ p.name }}</option>{% endfor %}
-          </select></div>
-        <button class="btn btn-success w-100">保存</button>
-        <a class="btn btn-link btn-sm mt-2" href="{% url 'category_list' %}">← 返回</a>
+        <div><label class="form-label" for="categoryCode">分类编码</label><input class="form-control" id="categoryCode" name="code" placeholder="例如：01-01-01" pattern="[0-9]{2}(-[0-9]{2}){0,2}" required><span class="help-text">相同编码将更新原有类目信息。</span></div>
+        <div><label class="form-label" for="categoryName">类目名称</label><input class="form-control" id="categoryName" name="name" placeholder="例如：膨化食品" maxlength="64" required></div>
+        <div><label class="form-label" for="categoryLevel">类目层级</label><select class="form-select" id="categoryLevel" name="level"><option value="1">一级类目</option><option value="2">二级类目</option><option value="3" selected>三级类目</option></select></div>
+        <div><label class="form-label" for="parentCode">父级类目</label><select class="form-select" id="parentCode" name="parent_code"><option value="">无父级</option>{% for parent in parents %}<option value="{{ parent.code }}" data-level="{{ parent.level }}">{{ parent.code }} · {{ parent.name }}</option>{% endfor %}</select><span class="help-text">二级类目选择一级父级，三级类目选择二级父级。</span></div>
+        <div class="full form-actions"><button class="btn btn-primary" type="submit"><i class="bi bi-check2"></i><span>保存类目</span></button><a class="btn btn-secondary" href="{% url 'category_list' %}">取消</a></div>
       </form>
-    </div>
+    </section>
   </div>
 </div>
 {% endblock %}
