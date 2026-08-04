@@ -76,6 +76,24 @@
   }
   window.ekToast = toast;
 
+  /* ---------- 表单提交中状态（Spec §4.3/§6：禁用+进行中） ---------- */
+  document.addEventListener("submit", function (e) {
+    var btn = e.target.querySelector && e.target.querySelector("button[type=submit], button:not([type=button])");
+    if (!btn || btn.dataset.loading === "1") return;
+    var old = btn.textContent;
+    btn.dataset.loading = "1";
+    btn.disabled = true;
+    btn.textContent = (btn.dataset.loadingText || "处理中…");
+    // 若 6s 内未跳转（同步请求），恢复可点，避免卡死
+    setTimeout(function () {
+      if (btn && document.body.contains(btn)) {
+        btn.disabled = false;
+        btn.textContent = old;
+        btn.dataset.loading = "";
+      }
+    }, 6000);
+  });
+
   // 把页面里的 Django alert 也包一层淡入（保持可读，不破坏功能）
   document.querySelectorAll(".alert").forEach(function (el) {
     el.style.opacity = "0";

@@ -42,15 +42,15 @@ def log_op(request, action, detail=""):
 # ---------------- 演示端 ----------------
 def login_view(request):
     error = ""
+    username = request.POST.get("username", "").strip()
     if request.method == "POST":
-        username = request.POST.get("username", "").strip()
         password = request.POST.get("password", "")
         user = authenticate(request, username=username, password=password)
         if user:
             login(request, user)
             return redirect("admin_dashboard" if get_role(user) == "admin" else "demo_home")
         error = "用户名或密码错误"
-    return render(request, "classifier/login.html", {"error": error})
+    return render(request, "classifier/login.html", {"error": error, "username": username})
 
 
 def logout_view(request):

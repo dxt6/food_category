@@ -8,67 +8,68 @@
    ========================================================================= */
 
 :root {
-  /* 中性灰阶（zinc 风） */
-  --bg: #fafafa;
-  --bg-elevated: #ffffff;
-  --bg-subtle: #f4f4f5;
-  --border: rgba(24, 24, 27, 0.06);
-  --text: #18181b;
-  --text-muted: #71717a;
-  --text-faint: #a1a1aa;
+  /* 配色（对齐 Spec v2.0 §4.1） */
+  --bg: #F7F8F6;          /* 页面背景 */
+  --bg-elevated: #FFFFFF; /* 内容背景 */
+  --bg-subtle: #EEF1EE;   /* 次级底色 */
+  --border: rgba(23, 33, 29, 0.08);
+  --text: #17211D;        /* 主文字 */
+  --text-muted: #68736D;  /* 次文字 */
+  --text-faint: #97A19B;
 
-  /* 单一克制 accent（低饱和深青） */
-  --accent: #0e7c66;
-  --accent-hover: #0b6353;
-  --accent-soft: rgba(14, 124, 102, 0.10);
-  --accent-contrast: #ffffff;
+  /* 主强调色：低饱和深绿（Spec §4.1） */
+  --accent: #147D68;
+  --accent-hover: #0F6655;
+  --accent-soft: rgba(20, 125, 104, 0.10);
+  --accent-contrast: #FFFFFF;
 
-  /* 语义色（低饱和，避免刺眼） */
-  --danger: #b42318;
-  --danger-soft: rgba(180, 35, 24, 0.10);
-  --warn: #b45309;
-  --warn-soft: rgba(180, 83, 9, 0.10);
-  --info: #1d4ed8;
-  --info-soft: rgba(29, 78, 216, 0.10);
+  /* 语义色 */
+  --danger: #C0392B;
+  --danger-soft: rgba(192, 57, 43, 0.10);
+  --warn: #B7791F;        /* 琥珀 */
+  --warn-soft: rgba(183, 121, 31, 0.10);
+  --info: #2563B0;        /* 蓝 */
+  --info-soft: rgba(37, 99, 176, 0.10);
 
-  /* 阴影：多层半透明，柔和 */
-  --shadow-sm: 0 1px 2px rgba(24, 24, 27, 0.04), 0 1px 3px rgba(24, 24, 27, 0.06);
-  --shadow-md: 0 2px 4px rgba(24, 24, 27, 0.04), 0 4px 12px rgba(24, 24, 27, 0.06);
-  --shadow-lg: 0 8px 24px rgba(24, 24, 27, 0.08), 0 2px 6px rgba(24, 24, 27, 0.04);
+  /* 阴影：多层半透明，柔和（不喧宾夺主） */
+  --shadow-sm: 0 1px 2px rgba(23, 33, 29, 0.04), 0 1px 3px rgba(23, 33, 29, 0.06);
+  --shadow-md: 0 2px 4px rgba(23, 33, 29, 0.04), 0 4px 12px rgba(23, 33, 29, 0.06);
+  --shadow-lg: 0 8px 24px rgba(23, 33, 29, 0.08), 0 2px 6px rgba(23, 33, 29, 0.04);
 
-  /* 圆角 */
-  --radius-sm: 10px;
-  --radius: 16px;
-  --radius-lg: 22px;
+  /* 圆角（Spec §4.2：普通卡 8px，结果卡 12px，禁 16px+） */
+  --radius-sm: 8px;
+  --radius: 8px;
+  --radius-lg: 12px;
 
   /* 动效 */
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
-  --dur: 0.45s;
+  --dur: 0.4s;
 
-  --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC",
-    "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+  --font: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+    "Microsoft YaHei", "Hiragino Sans GB", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
 [data-theme="dark"] {
-  --bg: #0a0a0b;
-  --bg-elevated: #161618;
-  --bg-subtle: #1c1c1f;
-  --border: rgba(255, 255, 255, 0.08);
-  --text: #f4f4f5;
-  --text-muted: #a1a1aa;
-  --text-faint: #71717a;
+  /* 同语义，不用纯黑、不刺眼荧光（Spec §4.1） */
+  --bg: #161A18;
+  --bg-elevated: #1E2421;
+  --bg-subtle: #252C28;
+  --border: rgba(255, 255, 255, 0.09);
+  --text: #E8EDEA;
+  --text-muted: #9AA89F;
+  --text-faint: #6E7A73;
 
-  --accent: #2dd4bf;
-  --accent-hover: #14b8a6;
-  --accent-soft: rgba(45, 212, 191, 0.14);
-  --accent-contrast: #04130f;
+  --accent: #1FA98C;
+  --accent-hover: #2BC0A1;
+  --accent-soft: rgba(31, 169, 140, 0.16);
+  --accent-contrast: #06140F;
 
-  --danger: #f87171;
-  --danger-soft: rgba(248, 113, 113, 0.14);
-  --warn: #fbbf24;
-  --warn-soft: rgba(251, 191, 36, 0.14);
-  --info: #93c5fd;
-  --info-soft: rgba(147, 197, 253, 0.14);
+  --danger: #E57373;
+  --danger-soft: rgba(229, 115, 115, 0.16);
+  --warn: #E0B253;
+  --warn-soft: rgba(224, 178, 83, 0.16);
+  --info: #7FAFE0;
+  --info-soft: rgba(127, 175, 224, 0.16);
 
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4), 0 1px 3px rgba(0, 0, 0, 0.5);
   --shadow-md: 0 2px 4px rgba(0, 0, 0, 0.4), 0 4px 12px rgba(0, 0, 0, 0.5);
@@ -84,13 +85,13 @@ body {
   background: var(--bg);
   color: var(--text);
   font-family: var(--font);
-  letter-spacing: -0.011em;
+  letter-spacing: normal;
   line-height: 1.6;
   transition: background var(--dur) var(--ease-out), color var(--dur) var(--ease-out);
 }
 
 h1, h2, h3, h4, h5, h6 {
-  letter-spacing: -0.02em;
+  letter-spacing: normal;
   font-weight: 650;
   color: var(--text);
 }
@@ -122,7 +123,7 @@ a:hover { color: var(--accent-hover); }
   gap: 10px;
   font-weight: 680;
   font-size: 1.02rem;
-  letter-spacing: -0.02em;
+  letter-spacing: normal;
   color: var(--text);
 }
 .ek-brand .ek-logo {
@@ -182,7 +183,7 @@ a:hover { color: var(--accent-hover); }
 .btn {
   border-radius: var(--radius-sm) !important;
   font-weight: 560;
-  letter-spacing: -0.01em;
+  letter-spacing: normal;
   border: 1px solid transparent;
   transition: transform 0.18s var(--ease-out), background 0.2s var(--ease-out),
     box-shadow 0.2s var(--ease-out), border-color 0.2s var(--ease-out);
@@ -343,7 +344,7 @@ code {
   transition: box-shadow 0.3s var(--ease-out), transform 0.3s var(--ease-out);
 }
 .ek-stat:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
-.ek-stat .ek-num { font-size: 1.9rem; font-weight: 700; letter-spacing: -0.03em; line-height: 1.1; }
+.ek-stat .ek-num { font-size: 1.9rem; font-weight: 700; line-height: 1.1; }
 .ek-stat .ek-label { font-size: 0.82rem; color: var(--text-muted); margin-top: 2px; }
 .ek-stat .ek-bar { height: 4px; border-radius: 99px; background: var(--accent); margin-top: 12px; opacity: 0.5; }
 
@@ -362,7 +363,7 @@ code {
   box-shadow: var(--shadow-md);
   padding: 20px 22px;
 }
-.ek-result .ek-pred-name { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.02em; }
+.ek-result .ek-pred-name { font-size: 1.5rem; font-weight: 700;  }
 .ek-result .ek-pred-code {
   font-size: 0.82rem; font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   color: var(--accent); background: var(--accent-soft);
