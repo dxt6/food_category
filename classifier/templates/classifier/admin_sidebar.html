@@ -9,9 +9,12 @@
     <a class="sidebar-link {% if active == 'sample' %}active{% endif %}" href="{% url 'sample_list' %}" {% if active == 'sample' %}aria-current="page"{% endif %}><i class="bi bi-collection"></i><span>样本管理</span></a>
     <a class="sidebar-link {% if active == 'model' %}active{% endif %}" href="{% url 'model_manager' %}" {% if active == 'model' %}aria-current="page"{% endif %}><i class="bi bi-cpu"></i><span>模型管理</span></a>
     <a class="sidebar-link {% if active == 'record' %}active{% endif %}" href="{% url 'record_list' %}" {% if active == 'record' %}aria-current="page"{% endif %}><i class="bi bi-clock-history"></i><span>记录查询</span></a>
+    <span class="sidebar-section">视觉实训</span>
+    <a class="sidebar-link {% if active == 'vision_record' %}active{% endif %}" href="{% url 'vision_record_list' %}" {% if active == 'vision_record' %}aria-current="page"{% endif %}><i class="bi bi-image"></i><span>缺陷检测记录</span></a>
+    <a class="sidebar-link {% if active == 'vision_model' %}active{% endif %}" href="{% url 'vision_model_manager' %}" {% if active == 'vision_model' %}aria-current="page"{% endif %}><i class="bi bi-bounding-box-circles"></i><span>视觉模型管理</span></a>
     <a class="sidebar-link {% if active == 'user' %}active{% endif %}" href="{% url 'user_manager' %}" {% if active == 'user' %}aria-current="page"{% endif %}><i class="bi bi-people"></i><span>权限管理</span></a>
   </nav>
   <div class="sidebar-bottom">
-    <a href="{% url 'demo_home' %}"><i class="bi bi-stars"></i><span>返回分类演示</span><i class="bi bi-arrow-up-right"></i></a>
+    <a href="{% url 'vision_demo' %}"><i class="bi bi-camera"></i><span>返回检测演示</span><i class="bi bi-arrow-up-right"></i></a>
   </div>
 </aside>

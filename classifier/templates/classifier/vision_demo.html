@@ -1,0 +1,128 @@
+{% extends "classifier/base.html" %}
+{% block title %}包装缺陷检测 · 食品类别分类实训平台{% endblock %}
+{% block content %}
+<header class="page-hero vision-hero reveal">
+  <div>
+    <span class="eyebrow"><i class="bi bi-bounding-box-circles"></i> 机器视觉检测实训</span>
+    <h1>食品包装缺陷检测</h1>
+    <p>上传包装照片或使用摄像头拍摄，定位污渍、印刷错误、封口异常与胀气漏液。</p>
+  </div>
+  <div class="hero-meta">
+    <span class="{% if model_status.ready %}is-ready{% else %}is-warning{% endif %}"><i class="bi bi-cpu"></i>{% if model_status.ready %}YOLOv8n 已就绪{% else %}模型待训练{% endif %}</span>
+    <span><i class="bi bi-images"></i>{{ dataset_summary.total_images }} 张视觉样本</span>
+  </div>
+</header>
+
+{% if not model_status.ready %}
+  <div class="vision-notice reveal" role="status">
+    <i class="bi bi-info-circle"></i>
+    <div><strong>检测模型尚未安装</strong><span>管理员可在“视觉模型管理”中准备数据并按训练命令生成权重；页面和记录功能已可使用。</span></div>
+    {% if user.profile.role == 'admin' %}<a class="btn btn-secondary btn-sm" href="{% url 'vision_model_manager' %}">前往管理</a>{% endif %}
+  </div>
+{% endif %}
+
+<div class="vision-layout">
+  <section class="surface-card vision-workspace reveal" aria-labelledby="visionInputTitle">
+    <div class="panel-heading">
+      <div><span class="step-label">STEP 01</span><h2 id="visionInputTitle">采集包装图像</h2><p>尽量保证包装完整入镜、光线均匀、画面清晰。</p></div>
+      <span class="section-icon"><i class="bi bi-camera"></i></span>
+    </div>
+    <form method="post" enctype="multipart/form-data" id="visionForm" data-loading-form data-loading-text="模型检测中…">
+      {% csrf_token %}
+      <div class="vision-dropzone" id="visionDropzone">
+        <input class="visually-hidden" type="file" id="packageImage" name="package_image" accept="image/jpeg,image/png,image/webp" capture="environment">
+        <div class="vision-upload-copy" id="visionUploadCopy">
+          <span class="vision-upload-icon"><i class="bi bi-cloud-arrow-up"></i></span>
+          <strong>拖入包装图片，或从本机选择</strong>
+          <span>支持 JPG、PNG、WEBP，最大 12 MB</span>
+          <div class="vision-upload-actions">
+            <label class="btn btn-primary" for="packageImage"><i class="bi bi-folder2-open"></i>选择图片</label>
+            <button class="btn btn-secondary" type="button" id="cameraStart"><i class="bi bi-camera"></i>打开摄像头</button>
+          </div>
+        </div>
+        <div class="vision-preview-wrap" id="visionPreviewWrap" hidden>
+          <img id="visionPreview" alt="待检测包装图片预览">
+          <div class="vision-preview-bar"><span id="visionFileName"></span><label class="btn btn-secondary btn-sm" for="packageImage">更换图片</label></div>
+        </div>
+      </div>
+
+      <div class="camera-panel" id="cameraPanel" hidden>
+        <video id="cameraVideo" autoplay playsinline muted></video>
+        <canvas id="cameraCanvas" hidden></canvas>
+        <div class="camera-actions"><button class="btn btn-primary" type="button" id="cameraCapture"><i class="bi bi-record-circle"></i>拍摄当前画面</button><button class="btn btn-link" type="button" id="cameraClose">关闭摄像头</button></div>
+        <p id="cameraMessage" aria-live="polite"></p>
+      </div>
+
+      <div class="threshold-control">
+        <div><label class="form-label" for="visionThreshold">置信度阈值</label><span>阈值越高，误报越少，但可能漏掉轻微缺陷。</span></div>
+        <select class="form-select" id="visionThreshold" name="threshold">
+          <option value="0.15" {% if threshold == '0.15' %}selected{% endif %}>15% · 灵敏</option>
+          <option value="0.25" {% if threshold == '0.25' %}selected{% endif %}>25% · 推荐</option>
+          <option value="0.40" {% if threshold == '0.40' %}selected{% endif %}>40% · 稳健</option>
+          <option value="0.60" {% if threshold == '0.60' %}selected{% endif %}>60% · 严格</option>
+        </select>
+      </div>
+      <div class="form-actions">
+        <button class="btn btn-primary btn-lg" type="submit"><i class="bi bi-bounding-box-circles"></i><span>开始缺陷检测</span></button>
+        <a class="btn btn-secondary btn-lg" href="{% url 'vision_demo' %}"><i class="bi bi-arrow-counterclockwise"></i>清空</a>
+      </div>
+    </form>
+
+    {% if result.error %}
+      <div class="alert app-alert app-alert-warning result-message" role="alert"><i class="bi bi-exclamation-triangle"></i><span>{{ result.error }}</span></div>
+    {% endif %}
+
+    {% if result.prediction %}
+      <section class="vision-result reveal {% if result.prediction.has_defect %}has-defect{% else %}is-qualified{% endif %}" aria-labelledby="visionResultTitle">
+        <div class="vision-result-head">
+          <div><span class="result-kicker"><i class="bi {% if result.prediction.has_defect %}bi-exclamation-diamond{% else %}bi-shield-check{% endif %}"></i> STEP 02 · 检测完成</span><h2 id="visionResultTitle">{% if result.prediction.has_defect %}发现包装缺陷{% else %}包装检测合格{% endif %}</h2><p>{% if result.prediction.has_defect %}主要缺陷：{{ result.prediction.primary_display_name }}{% else %}当前阈值下未发现可疑缺陷区域{% endif %}</p></div>
+          <span class="vision-verdict"><strong>{% if result.prediction.has_defect %}不合格{% else %}合格{% endif %}</strong><small>{{ result.prediction.inference_ms|floatformat:0 }} ms</small></span>
+        </div>
+        <div class="vision-result-grid">
+          <figure class="annotated-figure"><img src="{{ result.record.annotated_image.url }}" alt="食品包装缺陷检测标注结果"><figcaption><i class="bi bi-bounding-box"></i>模型标注结果 · YOLOv8n</figcaption></figure>
+          <div class="detection-details">
+            <div class="vision-result-metrics"><div><span>检测框</span><strong>{{ result.prediction.detections|length }}</strong></div><div><span>最高置信度</span><strong>{{ result.prediction.confidence_pct|floatformat:1 }}%</strong></div><div><span>阈值</span><strong>{% widthratio result.record.threshold 1 100 %}%</strong></div></div>
+            {% if result.prediction.detections %}
+              <div class="detection-list">
+                {% for detection in result.prediction.detections %}
+                  <div class="detection-item"><span class="detection-index">{{ forloop.counter|stringformat:"02d" }}</span><div><strong>{{ detection.display_name }}</strong><small>位置 [{{ detection.box|join:", " }}]</small></div><span>{{ detection.confidence_pct|floatformat:1 }}%</span></div>
+                {% endfor %}
+              </div>
+            {% else %}
+              <div class="qualified-message"><i class="bi bi-check2-circle"></i><div><strong>未检测到缺陷框</strong><span>该结果表示当前模型和阈值下未发现异常，不替代人工质量复核。</span></div></div>
+            {% endif %}
+          </div>
+        </div>
+      </section>
+    {% endif %}
+  </section>
+
+  <aside class="vision-insights reveal" aria-label="视觉检测数据概览">
+    <section class="surface-card summary-panel">
+      <div class="panel-heading compact"><div><span class="step-label">INSPECTION OVERVIEW</span><h2>检测数据概览</h2></div><span class="live-dot"><i></i>实时记录</span></div>
+      <div class="stat-grid">
+        <div class="stat-card"><span class="stat-icon blue"><i class="bi bi-camera"></i></span><div><strong>{{ vision_summary.completed }}</strong><span>累计检测</span></div></div>
+        <div class="stat-card"><span class="stat-icon amber"><i class="bi bi-exclamation-diamond"></i></span><div><strong>{{ vision_summary.defects }}</strong><span>缺陷包装</span></div></div>
+        <div class="stat-card"><span class="stat-icon mint"><i class="bi bi-shield-check"></i></span><div><strong>{{ vision_summary.qualified }}</strong><span>合格包装</span></div></div>
+        <div class="stat-card"><span class="stat-icon violet"><i class="bi bi-percent"></i></span><div><strong>{{ vision_summary.qualified_rate|floatformat:0 }}%</strong><span>检测合格率</span></div></div>
+      </div>
+    </section>
+
+    <section class="surface-card distribution-panel">
+      <div class="panel-heading compact"><div><span class="step-label">DEFECT DISTRIBUTION</span><h2>缺陷类型分布</h2></div></div>
+      {% if vision_summary.class_distribution %}
+        <div class="distribution-list">
+          {% for item in vision_summary.class_distribution %}<div class="distribution-item"><div><strong>{{ item.name }}</strong><span>{{ item.count }} 次 · {{ item.percent }}%</span></div><div class="distribution-track"><span style="width: {{ item.percent }}%"></span></div></div>{% endfor %}
+        </div>
+      {% else %}
+        <div class="empty-state compact"><i class="bi bi-bounding-box"></i><strong>暂无检测记录</strong><span>完成首次图片检测后，这里将展示缺陷分布。</span></div>
+      {% endif %}
+    </section>
+
+    <section class="surface-card annotation-note">
+      <span class="annotation-note-icon"><i class="bi bi-mortarboard"></i></span>
+      <div><strong>教学数据说明</strong><p>污渍、印刷错误、胀气漏液使用局部框标注；缺少框的封口异常使用整图弱标注，定位精度需结合人工复核。</p></div>
+    </section>
+  </aside>
+</div>
+{% endblock %}

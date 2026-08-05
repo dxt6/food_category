@@ -1,4 +1,10 @@
 # -*- coding: utf-8 -*-
+import csv
+import json
+import uuid
+from pathlib import Path
+
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
@@ -7,12 +13,15 @@ from django.core.paginator import Paginator
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
 from django.http import HttpResponse, JsonResponse
+from PIL import Image, UnidentifiedImageError
 
 from .models import (
-    FoodCategory, FoodSample, PredictionRecord, UserProfile,
+    FoodCategory, FoodSample, PredictionRecord, VisionDetectionRecord, UserProfile,
     SiteConfig, OperationLog,
 )
 from .ml import classifier as ml
+from .vision import dataset as vision_dataset
+from .vision import pipeline as vision_pipeline
 
 
 # ---------------- 工具 ----------------
@@ -46,6 +55,38 @@ def paginated_context(request, queryset, per_page):
     query_params = request.GET.copy()
     query_params.pop("page", None)
     return {"page_obj": page_obj, "querystring": query_params.urlencode()}
+
+
+def decorate_vision_record(record):
+    record.primary_display_name = vision_dataset.DEFECT_LABELS_ZH.get(
+        record.primary_class, record.primary_class or "包装合格"
+    )
+    record.confidence_pct = record.confidence * 100
+    return record
+
+
+def get_vision_summary():
+    records = VisionDetectionRecord.objects.filter(status="completed")
+    completed = records.count()
+    defects = records.filter(has_defect=True).count()
+    class_distribution = []
+    for class_name in vision_dataset.DEFECT_CLASSES:
+        count = records.filter(primary_class=class_name).count()
+        if count:
+            class_distribution.append(
+                {
+                    "name": vision_dataset.DEFECT_LABELS_ZH[class_name],
+                    "count": count,
+                    "percent": round(count / completed * 100) if completed else 0,
+                }
+            )
+    return {
+        "completed": completed,
+        "defects": defects,
+        "qualified": completed - defects,
+        "qualified_rate": (completed - defects) / completed * 100 if completed else 0,
+        "class_distribution": class_distribution,
+    }
 
 
 # ---------------- 演示端 ----------------
@@ -130,9 +171,78 @@ def demo_home(request):
     return render(request, "classifier/demo_home.html", ctx)
 
 
+@login_required
+def vision_demo(request):
+    result = None
+    if request.method == "POST":
+        uploaded_file = request.FILES.get("package_image")
+        try:
+            threshold = float(request.POST.get("threshold", "0.25"))
+        except ValueError:
+            threshold = 0.25
+        threshold = min(0.8, max(0.1, threshold))
+
+        if not uploaded_file:
+            result = {"error": "请选择食品包装图片，或使用摄像头拍摄后再检测。"}
+        elif uploaded_file.size > 12 * 1024 * 1024:
+            result = {"error": "图片不能超过 12 MB。"}
+        elif Path(uploaded_file.name).suffix.lower() not in {".jpg", ".jpeg", ".png", ".webp"}:
+            result = {"error": "仅支持 JPG、PNG 或 WEBP 图片。"}
+        else:
+            try:
+                image = Image.open(uploaded_file)
+                image.verify()
+                uploaded_file.seek(0)
+            except (UnidentifiedImageError, OSError):
+                result = {"error": "图片无法读取，请重新选择有效的包装照片。"}
+
+        if uploaded_file and result is None:
+            record = VisionDetectionRecord.objects.create(
+                image=uploaded_file,
+                threshold=threshold,
+                user=request.user,
+            )
+            date_path = timezone.localdate().strftime("%Y/%m/%d")
+            output_relative = Path("vision/annotated") / date_path / f"{uuid.uuid4().hex}.jpg"
+            output_absolute = Path(settings.MEDIA_ROOT) / output_relative
+            try:
+                prediction = vision_pipeline.run_detection(
+                    record.image.path, output_absolute, confidence=threshold
+                )
+            except Exception as error:
+                record.status = "failed"
+                record.error_message = str(error)[:1000]
+                record.save(update_fields=["status", "error_message"])
+                result = {"error": str(error), "record": decorate_vision_record(record)}
+            else:
+                record.annotated_image.name = output_relative.as_posix()
+                record.has_defect = prediction["has_defect"]
+                record.primary_class = prediction["primary_class"]
+                record.confidence = prediction["confidence"]
+                record.detections = prediction["detections"]
+                record.inference_ms = prediction["inference_ms"]
+                record.model_name = prediction["model_name"]
+                record.save()
+                result = {"prediction": prediction, "record": decorate_vision_record(record)}
+
+    try:
+        dataset_summary = vision_dataset.source_summary()
+    except FileNotFoundError as error:
+        dataset_summary = {"total_images": 0, "warnings": [str(error)]}
+    context = {
+        "result": result,
+        "vision_summary": get_vision_summary(),
+        "model_status": vision_pipeline.model_status(),
+        "dataset_summary": dataset_summary,
+        "threshold": request.POST.get("threshold", "0.25"),
+    }
+    return render(request, "classifier/vision_demo.html", context)
+
+
 # ---------------- 后台 ----------------
 @admin_required
 def admin_dashboard(request):
+    vision_summary = get_vision_summary()
     ctx = {
         "l1": FoodCategory.objects.filter(level=1).count(),
         "l2": FoodCategory.objects.filter(level=2).count(),
@@ -143,6 +253,9 @@ def admin_dashboard(request):
         "models": ml.list_models(),
         "logs": OperationLog.objects.all()[:10],
         "default_model": get_default_model(),
+        "vision_completed": vision_summary["completed"],
+        "vision_defects": vision_summary["defects"],
+        "vision_qualified_rate": vision_summary["qualified_rate"],
     }
     return render(request, "classifier/admin_dashboard.html", ctx)
 
@@ -248,7 +361,6 @@ def record_list(request):
 
 @admin_required
 def record_export(request):
-    import csv
     response = HttpResponse(content_type="text/csv")
     response["Content-Disposition"] = "attachment; filename=food_classify_records.csv"
     writer = csv.writer(response)
@@ -261,6 +373,105 @@ def record_export(request):
         ])
     log_op(request, "记录管理", "导出分类记录 CSV")
     return response
+
+
+@admin_required
+def vision_record_list(request):
+    records = VisionDetectionRecord.objects.select_related("user").all()
+    status_filter = request.GET.get("status", "").strip()
+    result_filter = request.GET.get("result", "").strip()
+    if status_filter in {"completed", "failed"}:
+        records = records.filter(status=status_filter)
+    if result_filter == "defect":
+        records = records.filter(status="completed", has_defect=True)
+    elif result_filter == "qualified":
+        records = records.filter(status="completed", has_defect=False)
+    page_context = paginated_context(request, records, 24)
+    decorated_records = [decorate_vision_record(record) for record in page_context["page_obj"]]
+    page_context.update(
+        {
+            "records": decorated_records,
+            "status_filter": status_filter,
+            "result_filter": result_filter,
+            "summary": get_vision_summary(),
+        }
+    )
+    return render(request, "classifier/vision_record_list.html", page_context)
+
+
+@admin_required
+def vision_record_export(request):
+    response = HttpResponse(content_type="text/csv; charset=utf-8")
+    response.write("\ufeff")
+    response["Content-Disposition"] = "attachment; filename=vision_detection_records.csv"
+    writer = csv.writer(response)
+    writer.writerow(
+        ["检测时间", "图片", "检测状态", "是否缺陷", "主要缺陷", "置信度", "检测框数", "推理耗时(ms)", "模型", "操作人"]
+    )
+    for record in VisionDetectionRecord.objects.select_related("user").all():
+        writer.writerow(
+            [
+                record.created_at.strftime("%Y-%m-%d %H:%M:%S"),
+                record.image.name,
+                record.get_status_display(),
+                "是" if record.has_defect else "否",
+                vision_dataset.DEFECT_LABELS_ZH.get(record.primary_class, record.primary_class),
+                f"{record.confidence:.4f}",
+                len(record.detections),
+                f"{record.inference_ms:.1f}",
+                record.model_name,
+                record.user.username if record.user else "",
+            ]
+        )
+    log_op(request, "视觉检测", "导出包装缺陷检测记录 CSV")
+    return response
+
+
+@admin_required
+def vision_model_manager(request):
+    manifest_path = Path(settings.VISION_PREPARED_DIR) / "manifest.json"
+    manifest = None
+    if manifest_path.exists():
+        try:
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, OSError):
+            manifest = None
+    try:
+        dataset_summary = vision_dataset.source_summary()
+    except FileNotFoundError as error:
+        dataset_summary = {"total_images": 0, "warnings": [str(error)]}
+    return render(
+        request,
+        "classifier/vision_model_manager.html",
+        {
+            "dataset_summary": dataset_summary,
+            "manifest": manifest,
+            "model_status": vision_pipeline.model_status(),
+            "uv_path": r"C:\Users\dongxiaotong\.local\bin\uv.exe",
+        },
+    )
+
+
+@admin_required
+def vision_prepare_dataset(request):
+    if request.method != "POST":
+        return redirect("vision_model_manager")
+    try:
+        manifest = vision_dataset.prepare_dataset(force=request.POST.get("force") == "1")
+    except (FileNotFoundError, ValueError, OSError) as error:
+        messages.error(request, f"数据集准备失败：{error}")
+    else:
+        stats = manifest["stats"]
+        log_op(
+            request,
+            "视觉模型管理",
+            f"准备 YOLO 数据集：训练 {stats['splits']['train']}，验证 {stats['splits']['val']}",
+        )
+        messages.success(
+            request,
+            f"YOLO 数据集已准备：训练 {stats['splits']['train']} 张，验证 {stats['splits']['val']} 张。",
+        )
+    return redirect("vision_model_manager")
 
 
 @admin_required

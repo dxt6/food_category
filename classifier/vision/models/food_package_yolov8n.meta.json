@@ -1,0 +1,18 @@
+{
+  "trained_at": "2026-08-05T01:34:05+08:00",
+  "model_name": "YOLOv8n",
+  "base_model": "classifier\\vision\\models\\food_package_yolov8n.pt",
+  "epochs": 15,
+  "imgsz": 640,
+  "batch": 12,
+  "device": "0",
+  "data_yaml": "classifier/vision/prepared_dataset/data.yaml",
+  "run_dir": "classifier/vision/runs/food_package_yolov8n_finetune",
+  "metrics": {
+    "metrics/precision(B)": 0.7722202460023008,
+    "metrics/recall(B)": 0.6154726583166413,
+    "metrics/mAP50(B)": 0.6998850014566473,
+    "metrics/mAP50-95(B)": 0.554774423103377,
+    "fitness": 0.554774423103377
+  }
+}

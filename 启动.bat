@@ -14,6 +14,7 @@ echo ============================================================
 
 REM ---- 0. resolve uv (install if missing) ----
 set "UV="
+if exist "C:\Users\dongxiaotong\.local\bin\uv.exe" set "UV=C:\Users\dongxiaotong\.local\bin\uv.exe"
 where uv >nul 2>&1 && set "UV=uv"
 if not defined UV if exist "%USERPROFILE%\.local\bin\uv.exe" set "UV=%USERPROFILE%\.local\bin\uv.exe"
 if not defined UV if exist "%LOCALAPPDATA%\uv\uv.exe" set "UV=%LOCALAPPDATA%\uv\uv.exe"
@@ -29,6 +30,7 @@ echo Using uv: %UV%
 
 REM ---- 1. resolve venv python (scan C:\Users\*, no hardcoded name) ----
 set "PY="
+if exist "%~dp0.venv\Scripts\python.exe" set "PY=%~dp0.venv\Scripts\python.exe"
 if defined MYVENV if exist "%MYVENV%" set "PY=%MYVENV%"
 if not defined PY (
   for /d %%d in ("%USERPROFILE%" "C:\Users\*") do (
@@ -36,9 +38,9 @@ if not defined PY (
   )
 )
 if not defined PY (
-  echo venv not found, creating one at %USERPROFILE%\.venv ...
-  "%UV%" venv "%USERPROFILE%\.venv"
-  if exist "%USERPROFILE%\.venv\Scripts\python.exe" set "PY=%USERPROFILE%\.venv\Scripts\python.exe"
+  echo venv not found, creating one in the project ...
+  "%UV%" venv "%~dp0.venv"
+  if exist "%~dp0.venv\Scripts\python.exe" set "PY=%~dp0.venv\Scripts\python.exe"
 )
 if not defined PY ( echo Cannot find or create a venv. Set MYVENV to your python.exe path and re-run. ; pause; exit /b )
 echo Using python: %PY%
@@ -50,8 +52,8 @@ echo [1/3] Installing dependencies via uv (Tsinghua mirror)...
 if errorlevel 1 ( echo Dependency install failed. ; pause; exit /b )
 
 REM ---- 3. sanity check ----
-"%PY%" -c "import django, sklearn; print('OK django', django.get_version(), 'sklearn', sklearn.__version__)" 2>nul
-if errorlevel 1 ( echo Django/sklearn not importable from this venv. ; pause; exit /b )
+"%PY%" -c "import django, sklearn, ultralytics, PIL; print('Dependencies OK')" 2>nul
+if errorlevel 1 ( echo Django/sklearn/ultralytics/Pillow not importable from this venv. ; pause; exit /b )
 
 REM ---- 4. init db + data ----
 echo [2/3] Initializing database and data...

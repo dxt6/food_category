@@ -1,0 +1,34 @@
+{% extends "classifier/base.html" %}
+{% block title %}缺陷检测记录 · 食品类别分类实训平台{% endblock %}
+{% block content %}
+<div class="admin-layout">
+  {% include "classifier/admin_sidebar.html" with active="vision_record" %}
+  <div class="admin-content">
+    <header class="admin-page-head reveal">
+      <div><span class="eyebrow"><i class="bi bi-image"></i> 视觉实训过程</span><h1>包装缺陷检测记录</h1><p>复查原图和标注结果，按结论筛选并导出实训数据。</p></div>
+      <div class="admin-actions"><a class="btn btn-secondary" href="{% url 'vision_demo' %}"><i class="bi bi-camera"></i>新建检测</a><a class="btn btn-primary" href="{% url 'vision_record_export' %}" data-download-feedback><i class="bi bi-download"></i>导出 CSV</a></div>
+    </header>
+    <section class="metric-grid compact-metrics" aria-label="视觉检测指标">
+      <div class="metric-card reveal"><span class="stat-icon blue"><i class="bi bi-camera"></i></span><div><strong>{{ summary.completed }}</strong><span>检测完成</span></div></div>
+      <div class="metric-card reveal"><span class="stat-icon amber"><i class="bi bi-exclamation-diamond"></i></span><div><strong>{{ summary.defects }}</strong><span>发现缺陷</span></div></div>
+      <div class="metric-card reveal"><span class="stat-icon mint"><i class="bi bi-shield-check"></i></span><div><strong>{{ summary.qualified_rate|floatformat:0 }}%</strong><span>合格率</span></div></div>
+    </section>
+    <div class="data-toolbar reveal">
+      <form method="get" class="filter-form"><label class="visually-hidden" for="visionStatusFilter">检测状态</label><select class="form-select" id="visionStatusFilter" name="status"><option value="">全部状态</option><option value="completed" {% if status_filter == 'completed' %}selected{% endif %}>检测完成</option><option value="failed" {% if status_filter == 'failed' %}selected{% endif %}>检测失败</option></select><label class="visually-hidden" for="visionResultFilter">检测结论</label><select class="form-select" id="visionResultFilter" name="result"><option value="">全部结论</option><option value="defect" {% if result_filter == 'defect' %}selected{% endif %}>存在缺陷</option><option value="qualified" {% if result_filter == 'qualified' %}selected{% endif %}>包装合格</option></select><button class="btn btn-secondary" type="submit"><i class="bi bi-funnel"></i>应用筛选</button>{% if status_filter or result_filter %}<a class="btn btn-link" href="{% url 'vision_record_list' %}">清除</a>{% endif %}</form>
+    </div>
+    {% if records %}
+      <div class="vision-record-grid">
+        {% for record in records %}
+          <article class="surface-card vision-record-card reveal">
+            <a class="vision-record-image" href="{{ record.image.url }}" target="_blank" rel="noopener"><img src="{% if record.annotated_image %}{{ record.annotated_image.url }}{% else %}{{ record.image.url }}{% endif %}" alt="{{ record.primary_display_name }}检测记录"></a>
+            <div class="vision-record-body"><div class="vision-record-status"><span class="badge {% if record.status == 'failed' %}badge-soft-danger{% elif record.has_defect %}badge-soft-warning{% else %}badge-soft-primary{% endif %}">{% if record.status == 'failed' %}失败{% elif record.has_defect %}不合格{% else %}合格{% endif %}</span><time>{{ record.created_at|date:"m-d H:i" }}</time></div><h2>{{ record.primary_display_name }}</h2><p>{% if record.status == 'failed' %}{{ record.error_message|truncatechars:54 }}{% elif record.has_defect %}{{ record.detections|length }} 个检测框 · 最高 {{ record.confidence_pct|floatformat:1 }}%{% else %}未发现缺陷框 · 阈值 {{ record.threshold|floatformat:2 }}{% endif %}</p><div class="vision-record-meta"><span><i class="bi bi-cpu"></i>{{ record.model_name }}</span><span><i class="bi bi-person"></i>{{ record.user.username|default:"—" }}</span></div></div>
+          </article>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="surface-card empty-state reveal"><i class="bi bi-image"></i><strong>暂无匹配的检测记录</strong><span>可调整筛选条件，或前往检测演示上传包装图片。</span></div>
+    {% endif %}
+    {% include "classifier/pagination.html" %}
+  </div>
+</div>
+{% endblock %}

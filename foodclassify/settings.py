@@ -7,6 +7,7 @@ Django settings for 食品类别分类系统 (foodclassify).
   同时执行 `pip install mysqlclient` 即可，业务代码无需改动。
 """
 
+import os
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -70,8 +71,7 @@ if USE_MYSQL:
         }
     }
 else:
-    import os as _os
-    _db_path = _os.environ.get("DB_PATH") or str(BASE_DIR / "db.sqlite3")
+    _db_path = os.environ.get("DB_PATH") or str(BASE_DIR / "db.sqlite3")
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.sqlite3",
@@ -95,9 +95,26 @@ STATIC_URL = "static/"
 STATICFILES_DIRS = [BASE_DIR / "classifier" / "static"]
 STATIC_ROOT = BASE_DIR / "static_collected"
 
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"
+
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 ML_DIR = BASE_DIR / "classifier" / "ml"
 DATASET_PATH = ML_DIR / "dataset.json"
 MODELS_DIR = ML_DIR / "models"
 LOGIN_URL = "/login/"
+
+VISION_DATASET_ROOT = Path(
+    os.environ.get(
+        "VISION_DATASET_ROOT",
+        r"C:\Users\dongxiaotong\Desktop\教学资源开发\食品包装检测_数据集补充",
+    )
+)
+VISION_DIR = BASE_DIR / "classifier" / "vision"
+VISION_PREPARED_DIR = VISION_DIR / "prepared_dataset"
+VISION_MODELS_DIR = VISION_DIR / "models"
+VISION_RUNS_DIR = VISION_DIR / "runs"
+VISION_MODEL_PATH = VISION_MODELS_DIR / "food_package_yolov8n.pt"
+VISION_MODEL_META_PATH = VISION_MODELS_DIR / "food_package_yolov8n.meta.json"
+VISION_DEVICE = os.environ.get("VISION_DEVICE", "auto")

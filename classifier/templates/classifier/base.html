@@ -24,10 +24,10 @@
     </a>
     <div class="app-topbar-actions">
       {% if user.is_authenticated %}
+        <a class="topbar-link d-none d-lg-inline-flex {% if request.resolver_match.url_name == 'demo_home' %}is-current{% endif %}" href="{% url 'demo_home' %}"><i class="bi bi-input-cursor-text"></i>文本分类</a>
+        <a class="topbar-link d-none d-lg-inline-flex {% if request.resolver_match.url_name == 'vision_demo' %}is-current{% endif %}" href="{% url 'vision_demo' %}"><i class="bi bi-camera"></i>包装检测</a>
         {% if user.profile.role == 'admin' %}
           <a class="topbar-link d-none d-md-inline-flex" href="{% url 'admin_dashboard' %}"><i class="bi bi-grid-1x2"></i>管理后台</a>
-        {% else %}
-          <span class="topbar-link d-none d-md-inline-flex is-current"><i class="bi bi-stars"></i>分类实训</span>
         {% endif %}
         <span class="user-chip">
           <span class="user-avatar" aria-hidden="true">{{ user.username|first|upper }}</span>
@@ -62,7 +62,7 @@
 <footer class="app-footer">
   <div class="container app-footer-inner">
     <span>食品类别分类 AI 实训平台</span>
-    <span>Django · Bootstrap · scikit-learn</span>
+    <span>Django · Bootstrap · scikit-learn · YOLOv8</span>
   </div>
 </footer>
 

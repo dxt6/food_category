@@ -1,0 +1,3 @@
+from .dataset import DEFECT_CLASSES, DEFECT_LABELS_ZH
+
+__all__ = ["DEFECT_CLASSES", "DEFECT_LABELS_ZH"]

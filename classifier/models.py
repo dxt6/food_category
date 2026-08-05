@@ -76,6 +76,39 @@ class PredictionRecord(models.Model):
         return f"{self.input_text[:20]} -> {self.predicted_name}({self.confidence:.2f})"
 
 
+class VisionDetectionRecord(models.Model):
+    STATUS_CHOICES = [("completed", "检测完成"), ("failed", "检测失败")]
+
+    image = models.ImageField("原始图片", upload_to="vision/originals/%Y/%m/%d")
+    annotated_image = models.ImageField(
+        "标注结果图", upload_to="vision/annotated/%Y/%m/%d", blank=True
+    )
+    status = models.CharField(
+        "检测状态", max_length=16, choices=STATUS_CHOICES, default="completed"
+    )
+    has_defect = models.BooleanField("是否存在缺陷", default=False)
+    primary_class = models.CharField("主要缺陷类型", max_length=64, blank=True)
+    confidence = models.FloatField("最高置信度", default=0)
+    detections = models.JSONField("检测框明细", default=list, blank=True)
+    inference_ms = models.FloatField("推理耗时（毫秒）", default=0)
+    model_name = models.CharField("使用模型", max_length=64, default="YOLOv8n")
+    threshold = models.FloatField("置信度阈值", default=0.25)
+    error_message = models.TextField("失败原因", blank=True)
+    user = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="操作人"
+    )
+    created_at = models.DateTimeField("检测时间", auto_now_add=True)
+
+    class Meta:
+        verbose_name = "包装缺陷检测记录"
+        verbose_name_plural = "包装缺陷检测记录"
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        result = self.primary_class or ("合格" if self.status == "completed" else "失败")
+        return f"{self.image.name} -> {result}"
+
+
 class UserProfile(models.Model):
     ROLE_CHOICES = [("student", "实训学生"), ("admin", "后台管理员")]
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="profile")

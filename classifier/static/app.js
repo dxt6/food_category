@@ -104,4 +104,119 @@
     syncParentOptions();
     levelSelect.addEventListener("change", syncParentOptions);
   }
+
+  var packageImage = document.getElementById("packageImage");
+  var visionDropzone = document.getElementById("visionDropzone");
+  var visionUploadCopy = document.getElementById("visionUploadCopy");
+  var visionPreviewWrap = document.getElementById("visionPreviewWrap");
+  var visionPreview = document.getElementById("visionPreview");
+  var visionFileName = document.getElementById("visionFileName");
+  var currentPreviewUrl = "";
+
+  function showVisionPreview(file) {
+    if (!file || !visionPreview || !visionPreviewWrap || !visionUploadCopy) return;
+    if (currentPreviewUrl) URL.revokeObjectURL(currentPreviewUrl);
+    currentPreviewUrl = URL.createObjectURL(file);
+    visionPreview.src = currentPreviewUrl;
+    visionPreviewWrap.hidden = false;
+    visionUploadCopy.hidden = true;
+    if (visionFileName) visionFileName.textContent = file.name;
+  }
+
+  function assignVisionFile(file) {
+    if (!packageImage || !file || !file.type.match(/^image\/(jpeg|png|webp)$/)) return false;
+    var transfer = new DataTransfer();
+    transfer.items.add(file);
+    packageImage.files = transfer.files;
+    showVisionPreview(file);
+    return true;
+  }
+
+  if (packageImage) {
+    packageImage.addEventListener("change", function () {
+      var file = packageImage.files && packageImage.files[0];
+      if (file) showVisionPreview(file);
+    });
+  }
+
+  if (visionDropzone) {
+    ["dragenter", "dragover"].forEach(function (eventName) {
+      visionDropzone.addEventListener(eventName, function (event) {
+        event.preventDefault();
+        visionDropzone.classList.add("is-dragging");
+      });
+    });
+    ["dragleave", "drop"].forEach(function (eventName) {
+      visionDropzone.addEventListener(eventName, function (event) {
+        event.preventDefault();
+        visionDropzone.classList.remove("is-dragging");
+      });
+    });
+    visionDropzone.addEventListener("drop", function (event) {
+      var file = event.dataTransfer.files && event.dataTransfer.files[0];
+      assignVisionFile(file);
+    });
+  }
+
+  var cameraStart = document.getElementById("cameraStart");
+  var cameraPanel = document.getElementById("cameraPanel");
+  var cameraVideo = document.getElementById("cameraVideo");
+  var cameraCanvas = document.getElementById("cameraCanvas");
+  var cameraCapture = document.getElementById("cameraCapture");
+  var cameraClose = document.getElementById("cameraClose");
+  var cameraMessage = document.getElementById("cameraMessage");
+  var cameraStream = null;
+
+  function stopCamera() {
+    if (cameraStream) cameraStream.getTracks().forEach(function (track) { track.stop(); });
+    cameraStream = null;
+    if (cameraVideo) cameraVideo.srcObject = null;
+    if (cameraPanel) cameraPanel.hidden = true;
+  }
+
+  if (cameraStart) {
+    cameraStart.addEventListener("click", function () {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        if (cameraMessage) cameraMessage.textContent = "当前浏览器不支持摄像头，请使用图片上传。";
+        if (cameraPanel) cameraPanel.hidden = false;
+        return;
+      }
+      navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" } }, audio: false }).then(function (stream) {
+        cameraStream = stream;
+        cameraVideo.srcObject = stream;
+        cameraPanel.hidden = false;
+        if (cameraMessage) cameraMessage.textContent = "";
+      }).catch(function () {
+        cameraPanel.hidden = false;
+        if (cameraMessage) cameraMessage.textContent = "无法访问摄像头，请检查浏览器权限或使用图片上传。";
+      });
+    });
+  }
+
+  if (cameraCapture) {
+    cameraCapture.addEventListener("click", function () {
+      if (!cameraVideo || !cameraCanvas || !cameraVideo.videoWidth) return;
+      cameraCanvas.width = cameraVideo.videoWidth;
+      cameraCanvas.height = cameraVideo.videoHeight;
+      cameraCanvas.getContext("2d").drawImage(cameraVideo, 0, 0);
+      cameraCanvas.toBlob(function (blob) {
+        if (!blob) return;
+        assignVisionFile(new File([blob], "camera-package.jpg", { type: "image/jpeg" }));
+        stopCamera();
+      }, "image/jpeg", 0.92);
+    });
+  }
+  if (cameraClose) cameraClose.addEventListener("click", stopCamera);
+  window.addEventListener("beforeunload", stopCamera);
+
+  document.querySelectorAll("[data-copy-command]").forEach(function (button) {
+    button.addEventListener("click", function () {
+      var code = button.parentElement.querySelector("code");
+      if (!code || !navigator.clipboard) return;
+      navigator.clipboard.writeText(code.textContent).then(function () {
+        button.innerHTML = '<i class="bi bi-check2"></i>';
+        window.setTimeout(function () { button.innerHTML = '<i class="bi bi-copy"></i>'; }, 1500);
+      });
+    });
+  });
 })();

@@ -19,6 +19,9 @@ test.db-journal
 # Django
 static_collected/
 *.log
+media/
+classifier/vision/prepared_dataset/
+classifier/vision/runs/
 
 # 系统/编辑器
 .DS_Store

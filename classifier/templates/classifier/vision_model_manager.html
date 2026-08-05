@@ -1,0 +1,52 @@
+{% extends "classifier/base.html" %}
+{% block title %}视觉模型管理 · 食品类别分类实训平台{% endblock %}
+{% block content %}
+<div class="admin-layout">
+  {% include "classifier/admin_sidebar.html" with active="vision_model" %}
+  <div class="admin-content">
+    <header class="admin-page-head reveal"><div><span class="eyebrow"><i class="bi bi-bounding-box-circles"></i> 视觉训练工作台</span><h1>视觉模型管理</h1><p>审计数据标注、生成标准 YOLO 划分并查看已安装模型。</p></div><div class="admin-actions"><a class="btn btn-secondary" href="{% url 'vision_demo' %}"><i class="bi bi-camera"></i>前往检测</a></div></header>
+
+    <section class="surface-card model-readiness reveal {% if model_status.ready %}is-ready{% else %}is-waiting{% endif %}">
+      <span class="model-readiness-icon"><i class="bi {% if model_status.ready %}bi-check2-circle{% else %}bi-hourglass-split{% endif %}"></i></span>
+      <div><span>当前推理模型</span><h2>{% if model_status.ready %}YOLOv8n 已安装{% else %}等待首次训练{% endif %}</h2><p>{% if model_status.ready %}权重 {{ model_status.size_mb|floatformat:1 }} MB · 推理设备 {{ model_status.device }}{% else %}完成下方数据准备与训练后，最佳权重会自动安装到系统。{% endif %}</p></div>
+    </section>
+
+    {% if model_status.ready and model_status.metadata %}
+      <section class="model-metric-strip reveal" aria-label="视觉模型验证指标">
+        <div><span>Precision</span><strong>{{ model_status.metrics.precision_pct|floatformat:1 }}%</strong></div>
+        <div><span>Recall</span><strong>{{ model_status.metrics.recall_pct|floatformat:1 }}%</strong></div>
+        <div><span>mAP50</span><strong>{{ model_status.metrics.map50_pct|floatformat:1 }}%</strong></div>
+        <div><span>mAP50–95</span><strong>{{ model_status.metrics.map5095_pct|floatformat:1 }}%</strong></div>
+      </section>
+    {% endif %}
+
+    <section class="metric-grid compact-metrics" aria-label="视觉数据集指标">
+      <div class="metric-card reveal"><span class="stat-icon blue"><i class="bi bi-images"></i></span><div><strong>{{ dataset_summary.total_images }}</strong><span>图像总数</span></div></div>
+      <div class="metric-card reveal"><span class="stat-icon amber"><i class="bi bi-bounding-box"></i></span><div><strong>{{ dataset_summary.labeled_images }}</strong><span>局部框图片</span></div></div>
+      <div class="metric-card reveal"><span class="stat-icon violet"><i class="bi bi-tags"></i></span><div><strong>4</strong><span>现有缺陷类</span></div></div>
+      <div class="metric-card reveal"><span class="stat-icon mint"><i class="bi bi-percent"></i></span><div><strong>{% widthratio dataset_summary.defect_ratio 1 100 %}%</strong><span>缺陷样本占比</span></div></div>
+    </section>
+
+    {% for warning in dataset_summary.warnings %}<div class="vision-notice is-warning reveal"><i class="bi bi-exclamation-triangle"></i><div><strong>数据交付提醒</strong><span>{{ warning }}</span></div></div>{% endfor %}
+
+    <div class="admin-grid vision-admin-grid">
+      <section class="surface-card content-card reveal">
+        <div class="content-card-head"><div><h2>标准训练集</h2><p>按类别与材质固定划分，优先使用硬链接节省空间。</p></div>{% if manifest %}<span class="badge badge-soft-primary">已准备</span>{% endif %}</div>
+        {% if manifest %}<div class="dataset-split"><div><span>训练集</span><strong>{{ manifest.stats.splits.train }}</strong></div><div><span>验证集</span><strong>{{ manifest.stats.splits.val }}</strong></div><div><span>弱标注</span><strong>{{ manifest.stats.weak_labels }}</strong></div></div>{% else %}<div class="empty-state compact"><i class="bi bi-diagram-2"></i><strong>尚未生成标准划分</strong><span>原 data.yaml 的训练和验证指向同一目录，需先整理。</span></div>{% endif %}
+        <form method="post" action="{% url 'vision_prepare_dataset' %}" data-loading-form data-loading-text="正在整理数据…" {% if manifest %}data-confirm="确认重新生成训练/验证划分？原始数据不会被修改。"{% endif %}>{% csrf_token %}{% if manifest %}<input type="hidden" name="force" value="1">{% endif %}<button class="btn {% if manifest %}btn-secondary{% else %}btn-primary{% endif %}" type="submit"><i class="bi bi-database-gear"></i>{% if manifest %}重新生成划分{% else %}准备 YOLO 数据集{% endif %}</button></form>
+      </section>
+      <section class="surface-card content-card reveal">
+        <div class="content-card-head"><div><h2>训练命令</h2><p>使用项目虚拟环境运行，最佳权重会自动安装。</p></div><span class="badge badge-soft-blue">管理员</span></div>
+        <div class="command-block"><code>.venv\Scripts\python.exe manage.py train_vision --epochs 30 --device auto</code><button type="button" data-copy-command aria-label="复制训练命令"><i class="bi bi-copy"></i></button></div>
+        <div class="training-facts"><span><i class="bi bi-gpu-card"></i>优先使用 NVIDIA GPU</span><span><i class="bi bi-aspect-ratio"></i>默认 640 像素</span><span><i class="bi bi-box"></i>默认 batch 8</span></div>
+        <p class="helper-text">依赖安装统一使用 <code>{{ uv_path }}</code> 和清华镜像；训练不在网页请求中执行，避免浏览器超时。</p>
+      </section>
+    </div>
+
+    <section class="surface-card content-card reveal">
+      <div class="content-card-head"><div><h2>标注策略与边界</h2><p>训练前必须向学生说明弱监督数据的定位能力边界。</p></div></div>
+      <div class="annotation-policy-grid"><div><span class="policy-index">01</span><strong>正常包装</strong><p>空标签负样本，用于学习“无缺陷框”。</p></div><div><span class="policy-index">02</span><strong>现有局部框</strong><p>污渍、印刷错误、胀气漏液重映射为 0–3 类。</p></div><div><span class="policy-index">03</span><strong>缺失框样本</strong><p>封口异常等生成整图弱标注，不宣称精确定位。</p></div></div>
+    </section>
+  </div>
+</div>
+{% endblock %}

@@ -6,7 +6,7 @@
   <div class="admin-content">
     <header class="admin-page-head reveal">
       <div><span class="eyebrow"><i class="bi bi-grid-1x2"></i> 管理工作台</span><h1>实训数据仪表盘</h1><p>统一查看类目、样本、模型和实训操作状态。</p></div>
-      <div class="admin-actions"><a class="btn btn-secondary" href="{% url 'demo_home' %}"><i class="bi bi-stars"></i>前往分类演示</a></div>
+      <div class="admin-actions"><a class="btn btn-secondary" href="{% url 'demo_home' %}"><i class="bi bi-stars"></i>文本分类</a><a class="btn btn-primary" href="{% url 'vision_demo' %}"><i class="bi bi-camera"></i>包装检测</a></div>
     </header>
 
     <section class="metric-grid" aria-label="核心数据指标">
@@ -16,6 +16,8 @@
       <div class="metric-card reveal"><span class="stat-icon amber"><i class="bi bi-database"></i></span><div><strong>{{ samples }}</strong><span>标注样本</span></div></div>
       <div class="metric-card reveal"><span class="stat-icon blue"><i class="bi bi-activity"></i></span><div><strong>{{ records }}</strong><span>推理记录</span></div></div>
       <div class="metric-card reveal"><span class="stat-icon mint"><i class="bi bi-people"></i></span><div><strong>{{ users }}</strong><span>系统账号</span></div></div>
+      <div class="metric-card reveal"><span class="stat-icon violet"><i class="bi bi-camera"></i></span><div><strong>{{ vision_completed }}</strong><span>视觉检测</span></div></div>
+      <div class="metric-card reveal"><span class="stat-icon amber"><i class="bi bi-exclamation-diamond"></i></span><div><strong>{{ vision_defects }}</strong><span>缺陷样本</span></div></div>
     </section>
 
     <div class="admin-grid">
